@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ActiveBharat | Professional Athletic Ecosystem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            transition: all 0.2s ease;
+        }
+
+        .active-tab {
+            border-bottom: 2px solid #1e40af;
+            color: #1e40af;
+            font-weight: 700;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        }
+    </style>
+</head>
+
+<body class="text-slate-900">
+
+    <!-- Chosen Palette: Navy Professional (blue-800/900) with High-Visibility Energy Accents (orange-500). -->
+    <!-- Application Structure Plan: A centralized command center layout. It moves away from "general fitness" tabs to "Performance Domains": 
+     1. Command Center (Daily Execution & Load)
+     2. Athletic DNA (Deep Health & Scouting Metrics)
+     3. Training Ops (AI Ghost & Infrastructure)
+     Chosen for high-density information display suitable for both athletes and their remote coaches. -->
+
+    <!-- Visualization & Content Choices:
+     1. Stacked Bar -> Training Load Balance (Physical vs Neural fatigue).
+     2. Radar Chart -> Athletic DNA (Power, Speed, Agility, Form, Stamina).
+     3. Line Charts -> Longitudinal progress for Bio-metrics (HRV/VO2).
+     Confirming NO SVG/Mermaid used. -->
+
+    <!-- Navigation Header -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-screen-2xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div
+                    class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                    AB</div>
+                <div>
+                    <h1 class="font-extrabold text-blue-900 leading-none">ACTIVE BHARAT</h1>
+                    <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Olympic Pathway
+                        Program</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="hidden md:flex space-x-4 text-sm font-semibold text-slate-500">
+                    <button onclick="navigate('dashboard')" id="btn-dashboard" class="active-tab pb-1">Command
+                        Center</button>
+                    <button onclick="navigate('dna')" id="btn-dna" class="pb-1 hover:text-blue-700">Athletic
+                        DNA</button>
+                    <button onclick="navigate('training')" id="btn-training" class="pb-1 hover:text-blue-700">Training
+                        Ops</button>
+                </div>
+                <div class="h-10 w-10 bg-slate-200 rounded-full border-2 border-blue-500 overflow-hidden">
+                    <div class="w-full h-full flex items-center justify-center text-slate-500">👤</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-screen-2xl mx-auto p-6">
+
+        <!-- DASHBOARD VIEW -->
+        <section id="view-dashboard">
+            <header class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-800">Welcome Back, Adhik</h2>
+                <p class="text-slate-500">Training Phase: <span class="text-blue-600 font-bold">Hypertrophy & Power
+                        (Week 3/6)</span> | Focus: Javelin Mechanics</p>
+            </header>
+
+            <!-- KPI Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card glass-panel p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-sm font-bold text-slate-400 uppercase">Training Readiness</span>
+                        <span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded">OPTIMAL</span>
+                    </div>
+                    <div class="text-3xl font-black text-slate-800">92%</div>
+                    <div class="text-xs text-slate-500 mt-2">HRV: 78ms | Sleep: 8.2h</div>
+                </div>
+                <div class="metric-card glass-panel p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-sm font-bold text-slate-400 uppercase">Daily Workload</span>
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded">ON TRACK</span>
+                    </div>
+                    <div class="text-3xl font-black text-slate-800">425 <span
+                            class="text-sm font-normal text-slate-400">AU</span></div>
+                    <div class="text-xs text-slate-500 mt-2">Target: 500 Arbitrary Units</div>
+                </div>
+                <div class="metric-card glass-panel p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-sm font-bold text-slate-400 uppercase">Olympic Rank</span>
+                        <span
+                            class="px-2 py-1 bg-orange-100 text-orange-700 text-[10px] font-bold rounded">NATIONAL</span>
+                    </div>
+                    <div class="text-3xl font-black text-slate-800">#142</div>
+                    <div class="text-xs text-slate-500 mt-2">State: Rajasthan (#4)</div>
+                </div>
+                <div class="metric-card glass-panel p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-sm font-bold text-slate-400 uppercase">Bio-Passport Score</span>
+                        <span class="px-2 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded">SCOUT
+                            FLAG</span>
+                    </div>
+                    <div class="text-3xl font-black text-slate-800">8.4<span
+                            class="text-sm font-normal text-slate-400">/10</span></div>
+                    <div class="text-xs text-slate-500 mt-2">Consistency: 98% (Last 90 days)</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Training Load Analysis -->
+                <div class="lg:col-span-2 glass-panel p-8 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Training Load Distribution</h3>
+                            <p class="text-xs text-slate-400">Balancing Physical vs. Neural Demand</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 bg-slate-100 text-[10px] font-bold rounded">7D</button>
+                            <button class="px-3 py-1 bg-blue-600 text-white text-[10px] font-bold rounded">30D</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="loadChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Execution List -->
+                <div class="glass-panel p-8 rounded-2xl shadow-sm bg-slate-900 text-white">
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="mr-2">📝</span> Execution List (Today)
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center p-3 bg-slate-800 rounded-xl border border-slate-700">
+                            <input type="checkbox" checked
+                                class="w-5 h-5 rounded border-slate-600 text-blue-500 focus:ring-blue-500 mr-4">
+                            <div class="flex-grow">
+                                <p class="text-sm font-bold">Mobility Flow (Yoga)</p>
+                                <p class="text-[10px] text-slate-400">20 Mins | Warm-up</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center p-3 bg-slate-800 rounded-xl border border-slate-700">
+                            <input type="checkbox"
+                                class="w-5 h-5 rounded border-slate-600 text-blue-500 focus:ring-blue-500 mr-4">
+                            <div class="flex-grow">
+                                <p class="text-sm font-bold">Kinematic Form Drill</p>
+                                <p class="text-[10px] text-slate-400">Requires AI Ghost Mode</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center p-3 bg-slate-800 rounded-xl border border-slate-700">
+                            <input type="checkbox"
+                                class="w-5 h-5 rounded border-slate-600 text-blue-500 focus:ring-blue-500 mr-4">
+                            <div class="flex-grow">
+                                <p class="text-sm font-bold">Protein Refeed: 120g</p>
+                                <p class="text-[10px] text-slate-400">Current: 45g | Snap Food Pic</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="w-full mt-6 py-3 gradient-bg rounded-xl font-bold text-sm">Launch Training
+                        Session</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ATHLETIC DNA VIEW -->
+        <section id="view-dna" class="hidden">
+            <header class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-800">Athletic DNA Profile</h2>
+                <p class="text-slate-500">Comprehensive biometric analysis and scouting readiness markers.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="glass-panel p-8 rounded-2xl">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6">Performance Radar</h3>
+                    <div class="chart-container h-[400px]">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="glass-panel p-6 rounded-2xl bg-orange-50 border-orange-100">
+                        <h4 class="font-bold text-orange-900 mb-2">Scouting Insight</h4>
+                        <p class="text-sm text-orange-800">Your <span class="font-bold">Power-to-Weight ratio</span> is
+                            in the 95th percentile for Javelin aspirants in North India. Institutional scouts from SAI
+                            Patiala have viewed your profile 3 times this month.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-white border border-slate-200 rounded-xl">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">VO2 Max (Est)</p>
+                            <p class="text-xl font-black">54.2 <span class="text-xs font-normal">ml/kg</span></p>
+                        </div>
+                        <div class="p-4 bg-white border border-slate-200 rounded-xl">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Resting HR</p>
+                            <p class="text-xl font-black">52 <span class="text-xs font-normal">bpm</span></p>
+                        </div>
+                        <div class="p-4 bg-white border border-slate-200 rounded-xl">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Explosive Power</p>
+                            <p class="text-xl font-black">740 <span class="text-xs font-normal">Watts</span></p>
+                        </div>
+                        <div class="p-4 bg-white border border-slate-200 rounded-xl">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Recovery Rate</p>
+                            <p class="text-xl font-black">High</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- Navigation Logic ---
+        function navigate(viewId) {
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-dna').classList.add('hidden');
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            // Update Tabs
+            ['dashboard', 'dna', 'training'].forEach(v => {
+                const btn = document.getElementById(`btn-${v}`);
+                if (btn) {
+                    btn.classList.remove('active-tab');
+                    btn.classList.add('text-slate-500');
+                }
+            });
+            document.getElementById(`btn-${viewId}`).classList.add('active-tab');
+        }
+
+        // --- Data Mockups (Production Simulation) ---
+        const performanceData = {
+            days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            physicalLoad: [300, 450, 200, 500, 400, 600, 100],
+            neuralLoad: [100, 200, 150, 300, 250, 400, 50],
+            radar: {
+                labels: ['Power', 'Agility', 'Speed', 'Endurance', 'Flexibility', 'Form Accuracy'],
+                values: [85, 70, 92, 65, 75, 88]
+            }
+        };
+
+        // --- Chart Implementations ---
+        Chart.defaults.font.family = 'Inter';
+        Chart.defaults.color = '#94a3b8';
+
+        // 1. Training Load Chart
+        const ctxLoad = document.getElementById('loadChart').getContext('2d');
+        new Chart(ctxLoad, {
+            type: 'bar',
+            data: {
+                labels: performanceData.days,
+                datasets: [
+                    {
+                        label: 'Physical Stress',
+                        data: performanceData.physicalLoad,
+                        backgroundColor: '#1e40af',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Neural Demand',
+                        data: performanceData.neuralLoad,
+                        backgroundColor: '#ea580c',
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true, grid: { display: false } },
+                    y: { stacked: true, grid: { color: '#f1f5f9' } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true } }
+                }
+            }
+        });
+
+        // 2. Radar Chart
+        const ctxRadar = document.getElementById('radarChart').getContext('2d');
+        new Chart(ctxRadar, {
+            type: 'radar',
+            data: {
+                labels: performanceData.radar.labels,
+                datasets: [{
+                    label: 'Current Status',
+                    data: performanceData.radar.values,
+                    fill: true,
+                    backgroundColor: 'rgba(30, 64, 175, 0.2)',
+                    borderColor: '#1e40af',
+                    pointBackgroundColor: '#1e40af',
+                    pointBorderColor: '#fff',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: '#f1f5f9' },
+                        grid: { color: '#f1f5f9' },
+                        pointLabels: { font: { size: 10, weight: 'bold' } },
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ActiveBharat | Project Eklavya — Olympic Athletic Ecosystem</title>
+    <meta name="description"
+        content="India's first AI-powered athletic scouting and training ecosystem. From village grounds to Olympic stadiums.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.8);
+            --bg-card-hover: rgba(30, 41, 59, 0.9);
+            --border: rgba(51, 65, 85, 0.5);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-orange: #f97316;
+            --accent-green: #22c55e;
+            --accent-purple: #a855f7;
+            --accent-red: #ef4444;
+            --accent-cyan: #06b6d4;
+            --gradient-hero: linear-gradient(135deg, #1e3a5f 0%, #0f172a 40%, #1a1a2e 100%);
+            --gradient-brand: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%);
+            --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            --shadow-glow: 0 0 30px rgba(59, 130, 246, 0.15);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse 600px 400px at 20% 20%, rgba(59, 130, 246, 0.08), transparent),
+                radial-gradient(ellipse 500px 500px at 80% 80%, rgba(249, 115, 22, 0.06), transparent),
+                radial-gradient(ellipse 400px 300px at 50% 50%, rgba(168, 85, 247, 0.04), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+
+        /* ===== GLASS CARD ===== */
+        .glass {
+            background: var(--gradient-glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-card);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 26, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-brand);
+            border-radius: var(--radius-xs);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 14px;
+            color: white;
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+        }
+
+        .nav-title {
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .nav-subtitle {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: var(--radius-xs);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link.active {
+            color: var(--accent-orange);
+            background: rgba(249, 115, 22, 0.1);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .nav-status::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .nav-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-orange);
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== HEADER ===== */
+        .view-header {
+            margin-bottom: 28px;
+        }
+
+        .view-header h2 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .view-header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .view-header .phase-tag {
+            color: var(--accent-orange);
+            font-weight: 700;
+        }
+
+        /* ===== KPI GRID ===== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+        }
+
+        .kpi-card.blue::before {
+            background: var(--gradient-blue);
+        }
+
+        .kpi-card.orange::before {
+            background: var(--gradient-brand);
+        }
+
+        .kpi-card.green::before {
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+        }
+
+        .kpi-card.purple::before {
+            background: linear-gradient(90deg, #a855f7, #7c3aed);
+        }
+
+        .kpi-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .kpi-sub {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .kpi-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 3px 8px;
+            border-radius: var(--radius-xs);
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-green {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+        }
+
+        .badge-blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+        }
+
+        .badge-orange {
+            background: rgba(249, 115, 22, 0.15);
+            color: var(--accent-orange);
+        }
+
+        .badge-purple {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--accent-purple);
+        }
+
+        /* ===== CONTENT GRID ===== */
+        .content-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-2-1 {
+            grid-template-columns: 2fr 1fr;
+        }
+
+        .grid-1-1 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        /* ===== CHART PANELS ===== */
+        .panel {
+            padding: 24px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .panel-title {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .panel-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 280px;
+        }
+
+        .chart-wrap.tall {
+            height: 360px;
+        }
+
+        /* ===== TIME FILTERS ===== */
+        .time-filters {
+            display: flex;
+            gap: 4px;
+        }
+
+        .time-btn {
+            padding: 4px 12px;
+            border-radius: var(--radius-xs);
+            font-size: 10px;
+            font-weight: 700;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .time-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        /* ===== TASK LIST (Dark card) ===== */
+        .task-panel {
+            background: var(--bg-secondary);
+            border-color: var(--border);
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .task-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--text-muted);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .task-check.done {
+            border-color: var(--accent-green);
+            background: var(--accent-green);
+        }
+
+        .task-check.done::after {
+            content: '✓';
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .task-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .task-meta {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .task-type {
+            margin-left: auto;
+            padding: 3px 8px;
+            border-radius: var(--radius-xs);
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* ===== CTA BUTTON ===== */
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: var(--gradient-brand);
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(249, 115, 22, 0.4);
+        }
+
+        /* ===== METRIC TILES ===== */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric-tile {
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .metric-tile-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .metric-tile-value {
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .metric-tile-unit {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+
+        /* ===== INSIGHT CARD ===== */
+        .insight-card {
+            padding: 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            background: rgba(249, 115, 22, 0.05);
+        }
+
+        .insight-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-orange);
+            margin-bottom: 8px;
+        }
+
+        .insight-card p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ===== BIO-PASSPORT ===== */
+        .passport-header {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(168, 85, 247, 0.1));
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: var(--radius);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .passport-score {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-orange);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(249, 115, 22, 0.2);
+        }
+
+        .passport-score-val {
+            font-size: 28px;
+            font-weight: 900;
+        }
+
+        .passport-score-label {
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        /* ===== LEADERBOARD ===== */
+        .lb-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            margin-bottom: 6px;
+            transition: all 0.2s;
+        }
+
+        .lb-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .lb-rank {
+            font-size: 14px;
+            font-weight: 900;
+            width: 32px;
+            text-align: center;
+        }
+
+        .lb-rank.gold {
+            color: #fbbf24;
+        }
+
+        .lb-rank.silver {
+            color: #94a3b8;
+        }
+
+        .lb-rank.bronze {
+            color: #d97706;
+        }
+
+        .lb-name {
+            font-size: 13px;
+            font-weight: 600;
+            flex-grow: 1;
+        }
+
+        .lb-state {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .lb-score {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--accent-blue);
+        }
+
+        .lb-verified {
+            font-size: 9px;
+            color: var(--accent-green);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        /* ===== ONBOARDING MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            width: 90%;
+            max-width: 520px;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal h3 {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .modal .step-label {
+            font-size: 11px;
+            color: var(--accent-orange);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .form-select option {
+            background: var(--bg-secondary);
+        }
+
+        .step-progress {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .step-dot {
+            flex: 1;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--border);
+            transition: background 0.3s;
+        }
+
+        .step-dot.active {
+            background: var(--accent-orange);
+        }
+
+        .step-dot.done {
+            background: var(--accent-green);
+        }
+
+        /* ===== ARCHITECTURE DIAGRAM ===== */
+        .arch-layer {
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .arch-layer::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 2px;
+        }
+
+        .arch-layer.client::before {
+            background: var(--accent-blue);
+        }
+
+        .arch-layer.edge::before {
+            background: var(--accent-orange);
+        }
+
+        .arch-layer.cloud::before {
+            background: var(--accent-purple);
+        }
+
+        .arch-layer.data::before {
+            background: var(--accent-green);
+        }
+
+        .arch-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .arch-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .arch-chip {
+            padding: 4px 10px;
+            border-radius: var(--radius-xs);
+            font-size: 10px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid-2-1,
+            .grid-1-1 {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                padding: 0 12px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .main {
+                padding: 16px;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== MOBILE NAV ===== */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 8px 16px;
+            z-index: 100;
+            justify-content: space-around;
+        }
+
+        @media (max-width: 640px) {
+            .mobile-nav {
+                display: flex;
+            }
+
+            body {
+                padding-bottom: 70px;
+            }
+        }
+
+        .mobile-nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 9px;
+            font-weight: 600;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+
+        .mobile-nav-btn.active {
+            color: var(--accent-orange);
+        }
+
+        .mobile-nav-btn span {
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-logo">AB</div>
+            <div>
+                <div class="nav-title">ACTIVE BHARAT</div>
+                <div class="nav-subtitle">Project Eklavya · Olympic Pathway</div>
+            </div>
+        </div>
+        <div class="nav-links" id="navLinks">
+            <button class="nav-link active" onclick="navigate('dashboard')" data-view="dashboard">⚡ Command
+                Center</button>
+            <button class="nav-link" onclick="navigate('dna')" data-view="dna">🧬 Athletic DNA</button>
+            <button class="nav-link" onclick="navigate('training')" data-view="training">🏋️ Training Ops</button>
+            <button class="nav-link" onclick="navigate('scouting')" data-view="scouting">🏅 Scouting</button>
+        </div>
+        <div class="nav-right">
+            <div class="nav-status">Sync Active</div>
+            <button class="nav-link" onclick="openOnboarding()" style="color:var(--accent-orange)">+ Onboard</button>
+            <div class="nav-avatar" title="Adhik Sharma">🏃</div>
+        </div>
+    </nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main">
+
+        <!-- ===== 1. COMMAND CENTER ===== -->
+        <section id="view-dashboard" class="section active">
+            <div class="view-header">
+                <h2>Command Center</h2>
+                <p>Training Phase: <span class="phase-tag">Hypertrophy & Power (Week 3/6)</span> · Javelin Mechanics ·
+                    Periodization: Mesocycle 2</p>
+            </div>
+
+            <!-- KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-card glass blue">
+                    <div class="kpi-label">Training Readiness</div>
+                    <div class="kpi-value" style="color:var(--accent-green)">92%</div>
+                    <div class="kpi-sub">HRV: 78ms · Sleep Score: 8.2h · rMSSD: 62</div>
+                    <span class="kpi-badge badge-green">OPTIMAL</span>
+                </div>
+                <div class="kpi-card glass orange">
+                    <div class="kpi-label">Daily Workload (AU)</div>
+                    <div class="kpi-value">425</div>
+                    <div class="kpi-sub">Target: 500 AU · ACWR: 0.92 (Safe zone)</div>
+                    <span class="kpi-badge badge-blue">ON TRACK</span>
+                </div>
+                <div class="kpi-card glass green">
+                    <div class="kpi-label">National Olympic Rank</div>
+                    <div class="kpi-value">#142</div>
+                    <div class="kpi-sub">State: Rajasthan (#4) · ↑ 18 positions (30d)</div>
+                    <span class="kpi-badge badge-orange">RISING</span>
+                </div>
+                <div class="kpi-card glass purple">
+                    <div class="kpi-label">Bio-Passport Index</div>
+                    <div class="kpi-value">8.4<span
+                            style="font-size:14px;font-weight:400;color:var(--text-secondary)">/10</span></div>
+                    <div class="kpi-sub">Consistency: 98% (90d) · 3 scout views</div>
+                    <span class="kpi-badge badge-purple">SCOUT FLAG</span>
+                </div>
+            </div>
+
+            <!-- Charts + Tasks -->
+            <div class="content-grid grid-2-1">
+                <div class="panel glass">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">Training Load Distribution</div>
+                            <div class="panel-subtitle">Physical vs Neural Demand · Progressive Overload Tracking</div>
+                        </div>
+                        <div class="time-filters">
+                            <button class="time-btn" onclick="setTimeFilter(this)">7D</button>
+                            <button class="time-btn active" onclick="setTimeFilter(this)">30D</button>
+                            <button class="time-btn" onclick="setTimeFilter(this)">90D</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrap"><canvas id="loadChart"></canvas></div>
+                </div>
+
+                <div class="panel glass task-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">📋 Execution List</div>
+                        <div style="font-size:10px;color:var(--accent-green);font-weight:700">3/6 done</div>
+                    </div>
+                    <div id="taskList">
+                        <div class="task-item" onclick="toggleTask(this)">
+                            <div class="task-check done"></div>
+                            <div>
+                                <div class="task-name">Mobility Flow (Surya Namaskar)</div>
+                                <div class="task-meta">20 min · Warm-up · Kinematic Chain Activation</div>
+                            </div>
+                            <div class="task-type badge-green"
+                                style="background:rgba(34,197,94,0.1);color:var(--accent-green)">Done</div>
+                        </div>
+                        <div class="task-item" onclick="toggleTask(this)">
+                            <div class="task-check done"></div>
+                            <div>
+                                <div class="task-name">Sprint Mechanics Drill</div>
+                                <div class="task-meta">30 min · Form Accuracy Target: 85%</div>
+                            </div>
+                            <div class="task-type badge-blue"
+                                style="background:rgba(59,130,246,0.1);color:var(--accent-blue)">Speed</div>
+                        </div>
+                        <div class="task-item" onclick="toggleTask(this)">
+                            <div class="task-check done"></div>
+                            <div>
+                                <div class="task-name">Protein Refeed: 120g</div>
+                                <div class="task-meta">Current: 85g · Snap Food Pic for AI tracking</div>
+                            </div>
+                            <div class="task-type badge-orange"
+                                style="background:rgba(249,115,22,0.1);color:var(--accent-orange)">Nutrition</div>
+                        </div>
+                        <div class="task-item" onclick="toggleTask(this)">
+                            <div class="task-check"></div>
+                            <div>
+                                <div class="task-name">Javelin Release Drill (AI Ghost)</div>
+                                <div class="task-meta">45 min · Requires Camera · Kinematic CV Analysis</div>
+                            </div>
+                            <div class="task-type badge-purple"
+                                style="background:rgba(168,85,247,0.1);color:var(--accent-purple)">Elite</div>
+                        </div>
+                        <div class="task-item" onclick="toggleTask(this)">
+                            <div class="task-check"></div>
+                            <div>
+                                <div class="task-name">Strength: Power Clean 4×5</div>
+                                <div class="task-meta">Progressive Overload: +2.5kg from last session</div>
+                            </div>
+                            <div class="task-type badge-blue"
+                                style="background:rgba(59,130,246,0.1);color:var(--accent-blue)">Power</div>
+                        </div>
+                        <div class="task-item" onclick="toggleTask(this)">
+                            <div class="task-check"></div>
+                            <div>
+                                <div class="task-name">Cooldown & HRV Check</div>
+                                <div class="task-meta">15 min · rPPG Vital Scan · Log Recovery</div>
+                            </div>
+                            <div class="task-type badge-green"
+                                style="background:rgba(34,197,94,0.1);color:var(--accent-green)">Recovery</div>
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="margin-top:16px"
+                        onclick="alert('🚀 Launching Training Session...\nAI Ghost Mode: Ready\nCamera: Requesting Access')">⚡
+                        Launch Training Session</button>
+                </div>
+            </div>
+
+            <!-- HRV Trend -->
+            <div class="content-grid grid-1-1" style="margin-top:20px">
+                <div class="panel glass">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">HRV & Recovery Trend</div>
+                            <div class="panel-subtitle">Heart Rate Variability (rMSSD) · Autonomic Readiness</div>
+                        </div>
+                    </div>
+                    <div class="chart-wrap"><canvas id="hrvChart"></canvas></div>
+                </div>
+                <div class="panel glass">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-title">Nutrition Macro Split</div>
+                            <div class="panel-subtitle">AI-detected from regional food database</div>
+                        </div>
+                    </div>
+                    <div class="chart-wrap"><canvas id="nutritionChart"></canvas></div>
+                    <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--text-muted)">
+                        Last meal: Bajra Roti + Dal · 45min ago · 380 kcal
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 2. ATHLETIC DNA ===== -->
+        <section id="view-dna" class="section">
+            <div class="view-header">
+                <h2>Athletic DNA Profile</h2>
+                <p>Comprehensive biometric analysis · Scouting readiness markers · Longitudinal Bio-Passport data</p>
+            </div>
+
+            <div class="content-grid grid-1-1">
+                <div class="panel glass">
+                    <div class="panel-title" style="margin-bottom:16px">Performance Radar — Athletic Phenotype</div>
+                    <div class="chart-wrap tall"><canvas id="radarChart"></canvas></div>
+                </div>
+                <div>
+                    <div class="insight-card" style="margin-bottom:16px">
+                        <h4>🏆 SAI Scouting Insight</h4>
+                        <p>Your <strong>Power-to-Weight ratio</strong> is in the <strong>95th percentile</strong> for
+                            Javelin aspirants in North India. Institutional scouts from SAI Patiala have viewed your
+                            profile <strong>3 times</strong> this month. Explosive power output of 740W exceeds the
+                            national U-21 benchmark by 12%.</p>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-tile">
+                            <div class="metric-tile-label">VO2 Max (Est)</div>
+                            <div class="metric-tile-value">54.2 <span class="metric-tile-unit">ml/kg/min</span></div>
+                            <div class="progress-bar" style="margin-top:8px">
+                                <div class="progress-fill" style="width:78%;background:var(--accent-blue)"></div>
+                            </div>
+                        </div>
+                        <div class="metric-tile">
+                            <div class="metric-tile-label">Resting HR</div>
+                            <div class="metric-tile-value">52 <span class="metric-tile-unit">bpm</span></div>
+                            <div class="progress-bar" style="margin-top:8px">
+                                <div class="progress-fill" style="width:85%;background:var(--accent-green)"></div>
+                            </div>
+                        </div>
+                        <div class="metric-tile">
+                            <div class="metric-tile-label">Explosive Power</div>
+                            <div class="metric-tile-value">740 <span class="metric-tile-unit">Watts</span></div>
+                            <div class="progress-bar" style="margin-top:8px">
+                                <div class="progress-fill" style="width:92%;background:var(--accent-orange)"></div>
+                            </div>
+                        </div>
+                        <div class="metric-tile">
+                            <div class="metric-tile-label">Recovery Rate</div>
+                            <div class="metric-tile-value">A+ <span class="metric-tile-unit">grade</span></div>
+                            <div class="progress-bar" style="margin-top:8px">
+                                <div class="progress-fill" style="width:95%;background:var(--accent-purple)"></div>
+                            </div>
+                        </div>
+                        <div class="metric-tile">
+                            <div class="metric-tile-label">Sprint (100m)</div>
+                            <div class="metric-tile-value">11.4 <span class="metric-tile-unit">sec</span></div>
+                            <div class="progress-bar" style="margin-top:8px">
+                                <div class="progress-fill" style="width:72%;background:var(--accent-cyan)"></div>
+                            </div>
+                        </div>
+                        <div class="metric-tile">
+                            <div class="metric-tile-label">Form Accuracy</div>
+                            <div class="metric-tile-value">88 <span class="metric-tile-unit">%</span></div>
+                            <div class="progress-bar" style="margin-top:8px">
+                                <div class="progress-fill" style="width:88%;background:var(--accent-orange)"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid grid-1-1" style="margin-top:20px">
+                <div class="panel glass">
+                    <div class="panel-title" style="margin-bottom:16px">VO2 Max Progression (12 months)</div>
+                    <div class="chart-wrap"><canvas id="vo2Chart"></canvas></div>
+                </div>
+                <div class="panel glass">
+                    <div class="panel-title" style="margin-bottom:16px">Body Composition Trend</div>
+                    <div class="chart-wrap"><canvas id="bodyCompChart"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 3. TRAINING OPS ===== -->
+        <section id="view-training" class="section">
+            <div class="view-header">
+                <h2>Training Operations</h2>
+                <p>AI-Powered periodization · Kinematic analysis infrastructure · Offline-first data pipeline</p>
+            </div>
+
+            <!-- Periodization Timeline -->
+            <div class="panel glass" style="margin-bottom:20px">
+                <div class="panel-title" style="margin-bottom:16px">📅 Periodization Plan — Macrocycle Overview</div>
+                <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px">
+                    <div
+                        style="flex:1;min-width:120px;padding:12px;border-radius:var(--radius-xs);border:1px solid rgba(34,197,94,0.3);background:rgba(34,197,94,0.05)">
+                        <div
+                            style="font-size:9px;font-weight:700;color:var(--accent-green);text-transform:uppercase;letter-spacing:1px">
+                            Phase 1 ✓</div>
+                        <div style="font-size:12px;font-weight:700;margin-top:4px">Anatomical Adapt.</div>
+                        <div style="font-size:10px;color:var(--text-muted)">Weeks 1-4 · Complete</div>
+                    </div>
+                    <div
+                        style="flex:1;min-width:120px;padding:12px;border-radius:var(--radius-xs);border:1px solid rgba(249,115,22,0.5);background:rgba(249,115,22,0.08);box-shadow:0 0 15px rgba(249,115,22,0.1)">
+                        <div
+                            style="font-size:9px;font-weight:700;color:var(--accent-orange);text-transform:uppercase;letter-spacing:1px">
+                            Phase 2 ⚡ Active</div>
+                        <div style="font-size:12px;font-weight:700;margin-top:4px">Hypertrophy & Power</div>
+                        <div style="font-size:10px;color:var(--text-muted)">Week 3/6 · On Track</div>
+                    </div>
+                    <div
+                        style="flex:1;min-width:120px;padding:12px;border-radius:var(--radius-xs);border:1px solid var(--border)">
+                        <div
+                            style="font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">
+                            Phase 3</div>
+                        <div style="font-size:12px;font-weight:700;margin-top:4px">Max Strength</div>
+                        <div style="font-size:10px;color:var(--text-muted)">Weeks 11-16</div>
+                    </div>
+                    <div
+                        style="flex:1;min-width:120px;padding:12px;border-radius:var(--radius-xs);border:1px solid var(--border)">
+                        <div
+                            style="font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">
+                            Phase 4</div>
+                        <div style="font-size:12px;font-weight:700;margin-top:4px">Power Conversion</div>
+                        <div style="font-size:10px;color:var(--text-muted)">Weeks 17-22</div>
+                    </div>
+                    <div
+                        style="flex:1;min-width:120px;padding:12px;border-radius:var(--radius-xs);border:1px solid var(--border)">
+                        <div
+                            style="font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">
+                            Phase 5</div>
+                        <div style="font-size:12px;font-weight:700;margin-top:4px">Competition Peaking</div>
+                        <div style="font-size:10px;color:var(--text-muted)">Weeks 23-26</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid grid-1-1">
+                <div class="panel glass">
+                    <div class="panel-title" style="margin-bottom:16px">ACWR (Acute:Chronic Workload Ratio)</div>
+                    <div class="chart-wrap"><canvas id="acwrChart"></canvas></div>
+                    <div class="insight-card" style="margin-top:12px">
+                        <h4>⚠️ Load Management</h4>
+                        <p>ACWR is 0.92 — within the <strong>optimal training zone (0.8-1.3)</strong>. Spike risk is
+                            low. Maintain progressive overload protocol.</p>
+                    </div>
+                </div>
+
+                <!-- Tech Architecture -->
+                <div class="panel glass">
+                    <div class="panel-title" style="margin-bottom:16px">🏗️ System Architecture</div>
+                    <div class="arch-layer client">
+                        <div class="arch-label" style="color:var(--accent-blue)">Client (Offline-First)</div>
+                        <div class="arch-items">
+                            <span class="arch-chip">React Native</span>
+                            <span class="arch-chip">IndexedDB</span>
+                            <span class="arch-chip">TF Lite</span>
+                            <span class="arch-chip">MediaPipe</span>
+                            <span class="arch-chip">rPPG Engine</span>
+                        </div>
+                    </div>
+                    <div class="arch-layer edge">
+                        <div class="arch-label" style="color:var(--accent-orange)">Edge-Cloud Inference</div>
+                        <div class="arch-items">
+                            <span class="arch-chip">AWS Lambda@Edge</span>
+                            <span class="arch-chip">Skeletal Overlay</span>
+                            <span class="arch-chip">60fps Async</span>
+                            <span class="arch-chip">Video Verify</span>
+                        </div>
+                    </div>
+                    <div class="arch-layer cloud">
+                        <div class="arch-label" style="color:var(--accent-purple)">Cloud Services</div>
+                        <div class="arch-items">
+                            <span class="arch-chip">Firestore</span>
+                            <span class="arch-chip">PostgreSQL</span>
+                            <span class="arch-chip">Cloud Functions</span>
+                            <span class="arch-chip">ML Pipeline</span>
+                        </div>
+                    </div>
+                    <div class="arch-layer data">
+                        <div class="arch-label" style="color:var(--accent-green)">Data Layer</div>
+                        <div class="arch-items">
+                            <span class="arch-chip">Bio-Passport Store</span>
+                            <span class="arch-chip">Food DB (Regional)</span>
+                            <span class="arch-chip">Kinematic Logs</span>
+                            <span class="arch-chip">Multi-Tenant</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 4. SCOUTING ===== -->
+        <section id="view-scouting" class="section">
+            <div class="view-header">
+                <h2>Scouting & Bio-Passport</h2>
+                <p>Longitudinal verifiable athletic record · Video-verified leaderboard · Institutional scout gateway
+                </p>
+            </div>
+
+            <div class="passport-header">
+                <div class="passport-score">
+                    <div class="passport-score-val">8.4</div>
+                    <div class="passport-score-label">Score</div>
+                </div>
+                <div>
+                    <div style="font-size:16px;font-weight:800">Adhik Sharma · Bio-Passport</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Sport: Javelin Throw ·
+                        Region: Rajasthan · Age: 19 · Training Consistency: 98%</div>
+                    <div style="display:flex;gap:8px;margin-top:8px">
+                        <span class="kpi-badge badge-purple" style="position:static">SCOUT FLAGGED</span>
+                        <span class="kpi-badge badge-green" style="position:static">VIDEO VERIFIED</span>
+                        <span class="kpi-badge badge-blue" style="position:static">SAI WATCHED</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid grid-1-1">
+                <div class="panel glass">
+                    <div class="panel-title" style="margin-bottom:16px">Bio-Passport Progression (12 months)</div>
+                    <div class="chart-wrap"><canvas id="passportChart"></canvas></div>
+                </div>
+                <div class="panel glass">
+                    <div class="panel-header">
+                        <div class="panel-title">🏆 National Leaderboard — Javelin U-21</div>
+                        <div class="lb-verified">🔒 Video-Verified Only</div>
+                    </div>
+                    <div>
+                        <div class="lb-row">
+                            <div class="lb-rank gold">1</div>
+                            <div>
+                                <div class="lb-name">Vikram Singh</div>
+                                <div class="lb-state">Haryana</div>
+                            </div>
+                            <div class="lb-score">9.2</div>
+                        </div>
+                        <div class="lb-row">
+                            <div class="lb-rank silver">2</div>
+                            <div>
+                                <div class="lb-name">Arjun Patel</div>
+                                <div class="lb-state">Gujarat</div>
+                            </div>
+                            <div class="lb-score">9.0</div>
+                        </div>
+                        <div class="lb-row">
+                            <div class="lb-rank bronze">3</div>
+                            <div>
+                                <div class="lb-name">Ravi Kumar</div>
+                                <div class="lb-state">Punjab</div>
+                            </div>
+                            <div class="lb-score">8.7</div>
+                        </div>
+                        <div class="lb-row" style="border-color:rgba(249,115,22,0.3);background:rgba(249,115,22,0.03)">
+                            <div class="lb-rank" style="color:var(--accent-orange)">4</div>
+                            <div>
+                                <div class="lb-name" style="color:var(--accent-orange)">Adhik Sharma (You)</div>
+                                <div class="lb-state">Rajasthan</div>
+                            </div>
+                            <div class="lb-score">8.4</div>
+                        </div>
+                        <div class="lb-row">
+                            <div class="lb-rank">5</div>
+                            <div>
+                                <div class="lb-name">Karan Mehra</div>
+                                <div class="lb-state">Delhi</div>
+                            </div>
+                            <div class="lb-score">8.1</div>
+                        </div>
+                        <div class="lb-row">
+                            <div class="lb-rank">6</div>
+                            <div>
+                                <div class="lb-name">Sunil Yadav</div>
+                                <div class="lb-state">UP</div>
+                            </div>
+                            <div class="lb-score">7.9</div>
+                        </div>
+                        <div class="lb-row">
+                            <div class="lb-rank">7</div>
+                            <div>
+                                <div class="lb-name">Deepak Nair</div>
+                                <div class="lb-state">Kerala</div>
+                            </div>
+                            <div class="lb-score">7.6</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ===== ONBOARDING MODAL ===== -->
+    <div class="modal-overlay" id="onboardingModal">
+        <div class="modal">
+            <div class="step-label" id="stepLabel">Step 1 of 4 — Personal Baseline</div>
+            <div class="step-progress">
+                <div class="step-dot active" id="dot1"></div>
+                <div class="step-dot" id="dot2"></div>
+                <div class="step-dot" id="dot3"></div>
+                <div class="step-dot" id="dot4"></div>
+            </div>
+            <div id="onboardStep1">
+                <h3>Athletic KYC — Baseline</h3>
+                <p style="font-size:12px;color:var(--text-secondary);margin:8px 0 20px">Your physical baseline helps us
+                    create a personalized periodization plan.</p>
+                <div class="form-group"><label class="form-label">Full Name</label><input class="form-input"
+                        placeholder="e.g., Adhik Sharma"></div>
+                <div class="form-group"><label class="form-label">Age</label><input class="form-input" type="number"
+                        placeholder="19"></div>
+                <div class="form-group"><label class="form-label">State / Region</label><select class="form-select">
+                        <option>Rajasthan</option>
+                        <option>Haryana</option>
+                        <option>Punjab</option>
+                        <option>Gujarat</option>
+                        <option>Delhi</option>
+                        <option>UP</option>
+                        <option>Kerala</option>
+                        <option>Other</option>
+                    </select></div>
+                <div class="form-group"><label class="form-label">Primary Sport</label><select class="form-select">
+                        <option>Javelin Throw</option>
+                        <option>Sprinting (100m/200m)</option>
+                        <option>Long Jump</option>
+                        <option>Wrestling</option>
+                        <option>Boxing</option>
+                        <option>Weightlifting</option>
+                        <option>Kabaddi</option>
+                        <option>General Fitness</option>
+                    </select></div>
+                <button class="btn-primary" onclick="nextStep(2)">Continue →</button>
+            </div>
+            <div id="onboardStep2" style="display:none">
+                <h3>Physical Assessment</h3>
+                <p style="font-size:12px;color:var(--text-secondary);margin:8px 0 20px">We'll use these to calculate
+                    your training zones and power targets.</p>
+                <div class="form-group"><label class="form-label">Height (cm)</label><input class="form-input"
+                        type="number" placeholder="178"></div>
+                <div class="form-group"><label class="form-label">Weight (kg)</label><input class="form-input"
+                        type="number" placeholder="75"></div>
+                <div class="form-group"><label class="form-label">Training Experience</label><select
+                        class="form-select">
+                        <option>Beginner (< 1 year)</option>
+                        <option>Intermediate (1-3 years)</option>
+                        <option>Advanced (3-5 years)</option>
+                        <option>Elite (5+ years)</option>
+                    </select></div>
+                <div class="form-group"><label class="form-label">Current Best (Primary Event)</label><input
+                        class="form-input" placeholder="e.g., 62m throw / 11.2s 100m"></div>
+                <button class="btn-primary" onclick="nextStep(3)">Continue →</button>
+            </div>
+            <div id="onboardStep3" style="display:none">
+                <h3>Equipment & Constraints</h3>
+                <p style="font-size:12px;color:var(--text-secondary);margin:8px 0 20px">Understanding your environment
+                    helps us adapt training protocols.</p>
+                <div class="form-group"><label class="form-label">Training Environment</label><select
+                        class="form-select">
+                        <option>Stadium / Track</option>
+                        <option>Gym Access</option>
+                        <option>Open Ground / Village</option>
+                        <option>Home Only</option>
+                    </select></div>
+                <div class="form-group"><label class="form-label">Internet Connectivity</label><select
+                        class="form-select">
+                        <option>4G/5G (Stable)</option>
+                        <option>4G (Intermittent)</option>
+                        <option>2G/3G Only</option>
+                        <option>Wi-Fi Only</option>
+                    </select></div>
+                <div class="form-group"><label class="form-label">Wearable Device</label><select class="form-select">
+                        <option>None (Phone camera only)</option>
+                        <option>Basic fitness band</option>
+                        <option>Smartwatch (HR)</option>
+                        <option>Advanced (Garmin/Polar)</option>
+                    </select></div>
+                <button class="btn-primary" onclick="nextStep(4)">Continue →</button>
+            </div>
+            <div id="onboardStep4" style="display:none">
+                <h3>📸 Vitals Scan (rPPG)</h3>
+                <p style="font-size:12px;color:var(--text-secondary);margin:8px 0 20px">Using Remote
+                    Photoplethysmography, we'll measure your resting heart rate and HRV through your phone's camera. No
+                    wearable needed.</p>
+                <div
+                    style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:var(--radius-sm);padding:24px;text-align:center;margin-bottom:20px">
+                    <div style="font-size:48px;margin-bottom:8px">📷</div>
+                    <div style="font-size:14px;font-weight:700;margin-bottom:4px">Camera Vitals Scan</div>
+                    <div style="font-size:11px;color:var(--text-muted)">Hold your phone steady · Face the front camera ·
+                        30 seconds</div>
+                    <button class="btn-primary"
+                        style="margin-top:16px;max-width:200px;margin-left:auto;margin-right:auto"
+                        onclick="alert('📷 Starting rPPG scan...\nEstimated HR: 68 bpm\nHRV (rMSSD): 55ms\nBaseline captured!')">Start
+                        Scan</button>
+                </div>
+                <button class="btn-primary" onclick="closeOnboarding()" style="background:var(--accent-green)">✅
+                    Complete Onboarding</button>
+            </div>
+            <button onclick="closeOnboarding()"
+                style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer">✕</button>
+        </div>
+    </div>
+
+    <!-- ===== MOBILE NAV ===== -->
+    <div class="mobile-nav">
+        <button class="mobile-nav-btn active" onclick="navigate('dashboard')"
+            data-view="dashboard"><span>⚡</span>Command</button>
+        <button class="mobile-nav-btn" onclick="navigate('dna')" data-view="dna"><span>🧬</span>DNA</button>
+        <button class="mobile-nav-btn" onclick="navigate('training')"
+            data-view="training"><span>🏋️</span>Training</button>
+        <button class="mobile-nav-btn" onclick="navigate('scouting')" data-view="scouting"><span>🏅</span>Scout</button>
+    </div>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script>
+        /* === NAVIGATION === */
+        function navigate(viewId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll(`[data-view="${viewId}"]`).forEach(b => b.classList.add('active'));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Lazy init charts
+            if (viewId === 'dna' && !window._dnaInit) initDNACharts();
+            if (viewId === 'training' && !window._trainingInit) initTrainingCharts();
+            if (viewId === 'scouting' && !window._scoutInit) initScoutCharts();
+        }
+
+        function setTimeFilter(btn) {
+            btn.parentElement.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function toggleTask(el) {
+            const check = el.querySelector('.task-check');
+            check.classList.toggle('done');
+        }
+
+        /* === ONBOARDING === */
+        function openOnboarding() { document.getElementById('onboardingModal').classList.add('active'); }
+        function closeOnboarding() { document.getElementById('onboardingModal').classList.remove('active'); resetOnboarding(); }
+        function nextStep(step) {
+            for (let i = 1; i <= 4; i++) document.getElementById('onboardStep' + i).style.display = 'none';
+            document.getElementById('onboardStep' + step).style.display = 'block';
+            const labels = ['Step 1 of 4 — Personal Baseline', 'Step 2 of 4 — Physical Assessment', 'Step 3 of 4 — Equipment & Constraints', 'Step 4 of 4 — Vitals Scan'];
+            document.getElementById('stepLabel').textContent = labels[step - 1];
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById('dot' + i);
+                dot.className = 'step-dot' + (i < step ? ' done' : i === step ? ' active' : '');
+            }
+        }
+        function resetOnboarding() { nextStep(1); }
+
+        /* === CHART CONFIG === */
+        Chart.defaults.font.family = 'Inter';
+        Chart.defaults.color = '#64748b';
+        const gridColor = 'rgba(51,65,85,0.3)';
+
+        /* === COMMAND CENTER CHARTS === */
+        // Training Load
+        new Chart(document.getElementById('loadChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [
+                    { label: 'Physical Stress', data: [300, 450, 200, 500, 400, 600, 100], backgroundColor: '#3b82f6', borderRadius: 4 },
+                    { label: 'Neural Demand', data: [100, 200, 150, 300, 250, 400, 50], backgroundColor: '#f97316', borderRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true, grid: { display: false } },
+                    y: { stacked: true, grid: { color: gridColor }, ticks: { callback: v => v + ' AU' } }
+                },
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, usePointStyle: true, pointStyle: 'circle' } } }
+            }
+        });
+
+        // HRV Chart
+        new Chart(document.getElementById('hrvChart'), {
+            type: 'line',
+            data: {
+                labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'],
+                datasets: [
+                    { label: 'HRV (rMSSD)', data: [55, 58, 62, 60, 65, 70, 72, 78], borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.4, pointRadius: 4 },
+                    { label: 'Readiness %', data: [70, 72, 75, 73, 80, 85, 88, 92], borderColor: '#3b82f6', borderDash: [5, 5], tension: 0.4, pointRadius: 3 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { x: { grid: { display: false } }, y: { grid: { color: gridColor } } },
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, usePointStyle: true, pointStyle: 'circle' } } }
+            }
+        });
+
+        // Nutrition Chart
+        new Chart(document.getElementById('nutritionChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Protein (35%)', 'Carbs (45%)', 'Fats (20%)'],
+                datasets: [{ data: [35, 45, 20], backgroundColor: ['#3b82f6', '#f97316', '#a855f7'], borderWidth: 0, borderRadius: 4 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '70%',
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } } }
+            }
+        });
+
+        /* === LAZY CHART INIT === */
+        function initDNACharts() {
+            window._dnaInit = true;
+            new Chart(document.getElementById('radarChart'), {
+                type: 'radar',
+                data: {
+                    labels: ['Power', 'Agility', 'Speed', 'Endurance', 'Flexibility', 'Form Accuracy'],
+                    datasets: [{
+                        label: 'Current', data: [85, 70, 92, 65, 75, 88],
+                        fill: true, backgroundColor: 'rgba(249,115,22,0.15)', borderColor: '#f97316',
+                        pointBackgroundColor: '#f97316', pointBorderColor: '#0a0e1a', pointBorderWidth: 2
+                    }, {
+                        label: 'National Avg', data: [60, 65, 70, 70, 60, 65],
+                        fill: true, backgroundColor: 'rgba(59,130,246,0.1)', borderColor: '#3b82f6',
+                        borderDash: [4, 4], pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { r: { angleLines: { color: gridColor }, grid: { color: gridColor }, pointLabels: { font: { size: 11, weight: '600' }, color: '#94a3b8' }, suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } },
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, usePointStyle: true, pointStyle: 'circle' } } }
+                }
+            });
+
+            new Chart(document.getElementById('vo2Chart'), {
+                type: 'line',
+                data: {
+                    labels: ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'],
+                    datasets: [{ label: 'VO2 Max', data: [42, 43, 44.5, 46, 47, 48.5, 49, 50.2, 51, 52, 53, 54.2], borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.1)', fill: true, tension: 0.4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false } }, y: { grid: { color: gridColor }, ticks: { callback: v => v + ' ml/kg' } } }, plugins: { legend: { display: false } } }
+            });
+
+            new Chart(document.getElementById('bodyCompChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Mar', 'May', 'Jul', 'Sep', 'Nov', 'Feb'],
+                    datasets: [
+                        { label: 'Lean Mass (kg)', data: [58, 59.5, 61, 62.5, 63, 64.2], backgroundColor: '#3b82f6', borderRadius: 4 },
+                        { label: 'Fat Mass (kg)', data: [17, 16, 15.5, 14, 13.5, 12.8], backgroundColor: '#64748b', borderRadius: 4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false } }, y: { grid: { color: gridColor } } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, usePointStyle: true, pointStyle: 'circle' } } } }
+            });
+        }
+
+        function initTrainingCharts() {
+            window._trainingInit = true;
+            const zone = Array(30).fill(null);
+            const acwrData = [0.7, 0.75, 0.8, 0.85, 0.88, 0.9, 0.85, 0.92, 0.95, 1.0, 0.98, 0.95, 0.9, 0.88, 0.92, 0.95, 0.97, 1.0, 1.05, 1.02, 0.98, 0.95, 0.9, 0.88, 0.85, 0.9, 0.92, 0.95, 0.93, 0.92];
+            new Chart(document.getElementById('acwrChart'), {
+                type: 'line',
+                data: {
+                    labels: acwrData.map((_, i) => 'D' + (i + 1)),
+                    datasets: [
+                        { label: 'ACWR', data: acwrData, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.1)', fill: true, tension: 0.3, pointRadius: 2 },
+                        { label: 'Danger Zone (1.5)', data: Array(30).fill(1.5), borderColor: '#ef4444', borderDash: [5, 5], pointRadius: 0 },
+                        { label: 'Optimal Upper (1.3)', data: Array(30).fill(1.3), borderColor: '#22c55e', borderDash: [3, 3], pointRadius: 0 },
+                        { label: 'Optimal Lower (0.8)', data: Array(30).fill(0.8), borderColor: '#22c55e', borderDash: [3, 3], pointRadius: 0 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } }, y: { grid: { color: gridColor }, min: 0.5, max: 1.8 } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, usePointStyle: true, pointStyle: 'circle', font: { size: 10 } } } } }
+            });
+        }
+
+        function initScoutCharts() {
+            window._scoutInit = true;
+            new Chart(document.getElementById('passportChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'],
+                    datasets: [
+                        { label: 'Bio-Passport Score', data: [5.2, 5.5, 5.8, 6.2, 6.5, 6.9, 7.2, 7.5, 7.8, 8.0, 8.2, 8.4], borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#f97316' },
+                        { label: 'SAI Scout Threshold', data: Array(12).fill(7.5), borderColor: '#a855f7', borderDash: [5, 5], pointRadius: 0 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false } }, y: { grid: { color: gridColor }, min: 4, max: 10 } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, usePointStyle: true, pointStyle: 'circle' } } } }
+            });
+        }
+    </script>
+</body>
+
+</html>
