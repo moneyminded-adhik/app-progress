@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ActiveBharat | Eklavya Map (Enhanced)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand: #f97316;
+            --color-brand-dark: #ea580c;
+            --color-surface: #18181b;
+            --color-surface-light: #27272a;
+            --color-positive: #22c55e;
+            --color-negative: #ef4444;
+            --color-warn: #eab308;
+            --font-sans: 'Inter', system-ui, sans-serif;
+        }
+    </style>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 2px;
+        }
+
+        /* Map Customizations */
+        #map {
+            height: 100vh;
+            width: 100vw;
+            z-index: 1;
+            background: #0a0a0c;
+        }
+
+        /* High-contrast dark tiles */
+        .dark-tiles {
+            filter: grayscale(1) invert(1) contrast(1.2) brightness(0.7);
+        }
+
+        /* Avatar Markers */
+        .avatar-marker {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 3px solid #f97316;
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.4);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            z-index: 100 !important;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .avatar-marker.ghost {
+            opacity: 0.5;
+            border-color: #71717a;
+            box-shadow: none;
+            filter: grayscale(1);
+        }
+
+        .avatar-marker:hover {
+            transform: scale(1.1);
+            cursor: pointer;
+            z-index: 105 !important;
+        }
+
+        /* Status Indicator on Avatar */
+        .status-dot {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #18181b;
+        }
+
+        .status-running {
+            background-color: #22c55e;
+            box-shadow: 0 0 8px #22c55e;
+            animation: pulse-green 1.5s infinite;
+        }
+
+        .status-lifting {
+            background-color: #eab308;
+            box-shadow: 0 0 8px #eab308;
+        }
+
+        .status-idle {
+            background-color: #3b82f6;
+            box-shadow: 0 0 8px #3b82f6;
+        }
+
+        .status-injured {
+            background-color: #ef4444;
+        }
+
+        .status-offline {
+            background-color: #71717a;
+        }
+
+        /* Generic Map Markers */
+        .map-icon-marker {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            z-index: 90 !important;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .map-icon-marker:hover {
+            transform: scale(1.15);
+            z-index: 95 !important;
+        }
+
+        .marker-challenge {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            border: 2px solid #fdba74;
+            animation: pulse-orange 2s infinite;
+        }
+
+        .marker-field {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: 2px solid #86efac;
+        }
+
+        .marker-event {
+            background: linear-gradient(135deg, #a855f7, #9333ea);
+            border: 2px solid #d8b4fe;
+        }
+
+        /* Clan Turf overlays - Made sensible with subtle styling */
+        .clan-turf-javelins {
+            stroke: #f97316;
+            stroke-width: 2;
+            stroke-dasharray: 5, 5;
+            fill: #f97316;
+            fill-opacity: 0.1;
+        }
+
+        .clan-turf-titans {
+            stroke: #3b82f6;
+            stroke-width: 2;
+            stroke-dasharray: 5, 5;
+            fill: #3b82f6;
+            fill-opacity: 0.1;
+        }
+
+        /* Animations */
+        @keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+
+        @keyframes pulse-orange {
+            0% {
+                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 12px rgba(249, 115, 22, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+            }
+        }
+
+        @keyframes slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .slide-up {
+            animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fade-in 0.2s ease forwards;
+        }
+
+        /* UI Overlays */
+        .ui-layer {
+            position: absolute;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .ui-layer>* {
+            pointer-events: auto;
+        }
+
+        /* Modal Content Layer */
+        .modal-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .modal-layer>* {
+            pointer-events: auto;
+        }
+
+        /* Leaflet popup overrides */
+        .leaflet-popup-content-wrapper {
+            background: rgba(24, 24, 27, 0.95);
+            backdrop-filter: blur(8px);
+            color: white;
+            border: 1px solid #3f3f46;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            padding: 0;
+        }
+
+        .leaflet-popup-content {
+            margin: 12px;
+            line-height: 1.4;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(24, 24, 27, 0.9);
+        }
+
+        .leaflet-container a.leaflet-popup-close-button {
+            color: #a1a1aa;
+            padding: 4px;
+        }
+    </style>
+</head>
+
+<body class="bg-zinc-950 text-zinc-100 overflow-hidden relative h-[100dvh]" x-data="eklavyaMap()" x-init="initMap()">
+
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Top UI Bar -->
+    <div
+        class="ui-layer top-0 inset-x-0 p-4 flex justify-between items-start bg-gradient-to-b from-black/90 via-black/50 to-transparent pb-16">
+        <div class="flex items-center gap-3">
+            <button @click="showSettings = true"
+                class="w-12 h-12 rounded-full border-2 transition-colors shadow-lg bg-zinc-800 relative group" :class="[
+                        myStatus === 'running' ? 'border-positive' : '',
+                        myStatus === 'lifting' ? 'border-warn' : '',
+                        myStatus === 'idle' ? 'border-blue-500' : '',
+                        myStatus === 'injured' ? 'border-negative' : '',
+                        myStatus === 'offline' ? 'border-zinc-500' : '',
+                        !isVisible ? 'opacity-50 border-zinc-700' : ''
+                    ]"
+                style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704d'); background-size: cover;">
+
+                <!-- Status Dot Mirror -->
+                <div x-show="isVisible"
+                    class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-zinc-950" :class="[
+                        myStatus === 'running' ? 'bg-positive shadow-[0_0_8px_#22c55e]' : '',
+                        myStatus === 'lifting' ? 'bg-warn shadow-[0_0_8px_#eab308]' : '',
+                        myStatus === 'idle' ? 'bg-blue-500 shadow-[0_0_8px_#3b82f6]' : '',
+                        myStatus === 'injured' ? 'bg-negative' : '',
+                        myStatus === 'offline' ? 'bg-zinc-500' : ''
+                     ]"></div>
+
+                <!-- Ghost Mode Icon -->
+                <div x-show="!isVisible"
+                    class="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-800 rounded-full border border-zinc-600 flex items-center justify-center shadow-lg">
+                    <span class="text-[10px]">👻</span>
+                </div>
+            </button>
+            <div class="pointer-events-none">
+                <div class="text-sm font-bold drop-shadow-md">Arjun Patel</div>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span
+                        class="text-[10px] font-bold text-brand uppercase tracking-wider bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm border border-brand/30">Jaipur
+                        Javelins</span>
+                    <span
+                        class="text-[10px] font-bold text-zinc-400 bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm border border-zinc-800">12,450
+                        BPI</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-2">
+            <button @click="recenterMap()"
+                class="w-10 h-10 rounded-full bg-zinc-900/80 backdrop-blur-md border border-zinc-700 flex items-center justify-center shadow-lg hover:bg-zinc-800 transition-colors">
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+            </button>
+            <button @click="showFriends = true"
+                class="w-10 h-10 rounded-full bg-zinc-900/80 backdrop-blur-md border border-zinc-700 flex items-center justify-center shadow-lg hover:bg-zinc-800 transition-colors relative mr-1">
+                <svg class="w-5 h-5 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <div
+                    class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-brand text-white text-[8px] font-bold flex items-center justify-center rounded-full border-2 border-zinc-900">
+                    2</div>
+            </button>
+            <button @click="showLeaderboard = true"
+                class="w-10 h-10 rounded-full bg-zinc-900/80 backdrop-blur-md border border-zinc-700 flex items-center justify-center shadow-lg hover:bg-zinc-800 transition-colors relative">
+                <svg class="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6m6 0h6m-6 0V9a2 2 0 012-2h2a2 2 0 012 2v10m6 0v-4a2 2 0 00-2-2h-2a2 2 0 00-2 2v4" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Map Filter Pills -->
+    <div
+        class="ui-layer top-20 inset-x-0 w-full overflow-x-auto pb-4 no-scrollbar px-4 pointer-events-auto flex justify-start">
+        <div class="flex gap-2 whitespace-nowrap">
+            <button @click="filter = 'all'"
+                :class="filter === 'all' ? 'bg-zinc-100 text-black border-zinc-100' : 'bg-black/60 text-white border-zinc-700'"
+                class="px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md transition-colors shadow-lg">All</button>
+            <button @click="filter = 'athletes'"
+                :class="filter === 'athletes' ? 'bg-blue-500 text-white border-blue-400' : 'bg-black/60 text-white border-zinc-700'"
+                class="px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md transition-colors shadow-lg flex items-center gap-1">👤
+                Athletes</button>
+            <button @click="filter = 'challenges'"
+                :class="filter === 'challenges' ? 'bg-brand text-white border-brand-dark' : 'bg-black/60 text-white border-zinc-700'"
+                class="px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md transition-colors shadow-lg flex items-center gap-1">⚡
+                Challenges</button>
+            <button @click="filter = 'fields'"
+                :class="filter === 'fields' ? 'bg-positive text-white border-green-600' : 'bg-black/60 text-white border-zinc-700'"
+                class="px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md transition-colors shadow-lg flex items-center gap-1">🏟️
+                Fields</button>
+            <button @click="filter = 'events'"
+                :class="filter === 'events' ? 'bg-purple-500 text-white border-purple-400' : 'bg-black/60 text-white border-zinc-700'"
+                class="px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-md transition-colors shadow-lg flex items-center gap-1">🏆
+                Events</button>
+        </div>
+    </div>
+
+    <!-- Bottom Action Bar / Nav -->
+    <div class="ui-layer bottom-0 inset-x-0 p-6 bg-gradient-to-t from-black via-black/90 to-transparent pb-8 pt-20">
+        <div class="flex items-center justify-between max-w-sm mx-auto">
+            <button @click="showClan = true"
+                class="flex flex-col items-center gap-1 text-zinc-400 hover:text-white transition-colors group">
+                <div class="p-2 rounded-xl group-hover:bg-zinc-800/50 transition-colors">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </div>
+                <span class="text-[10px] font-bold">Clan</span>
+            </button>
+
+            <button @click="triggerRally()" class="relative group outline-none">
+                <div
+                    class="absolute inset-0 bg-brand rounded-full blur-md opacity-50 group-hover:opacity-100 transition-opacity transform group-active:scale-90">
+                </div>
+                <div
+                    class="w-16 h-16 rounded-full bg-gradient-to-br from-brand to-brand-dark flex items-center justify-center relative border-4 border-zinc-950 text-white shadow-xl transform transition-transform group-active:scale-95">
+                    <svg class="w-8 h-8 drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <span
+                    class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white whitespace-nowrap drop-shadow bg-black/50 px-2 py-0.5 rounded-full">Rally
+                    Call</span>
+            </button>
+
+            <button
+                class="flex flex-col items-center gap-1 text-brand drop-shadow-[0_0_8px_rgba(249,115,22,0.5)] transition-colors group">
+                <div class="p-2 rounded-xl bg-brand/10 transition-colors">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                    </svg>
+                </div>
+                <span class="text-[10px] font-bold">Map</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Active Challenge Modal -->
+    <div x-show="activeChallenge" x-cloak
+        class="modal-layer bg-black/60 backdrop-blur-sm flex items-end justify-center pb-24 px-4 h-full w-full">
+        <div x-show="activeChallenge" @click.outside="activeChallenge = null"
+            x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-400"
+            x-transition:enter-start="opacity-0 translate-y-32 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 translate-y-32 scale-95"
+            class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl relative flex flex-col items-center font-sans">
+
+            <div
+                class="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-gradient-to-br from-brand to-brand-dark rounded-2xl flex items-center justify-center border-4 border-zinc-900 shadow-[0_0_30px_rgba(249,115,22,0.5)] rotate-3">
+                <svg class="w-10 h-10 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
+
+            <div class="text-center mt-10 mb-5 w-full">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-brand mb-1">Active Challenge</div>
+                <h2 class="text-2xl font-black leading-tight mb-1 text-white" x-text="challengeData?.name">The Sub-11
+                    Second Dash</h2>
+                <div class="text-xs font-semibold text-zinc-400 flex items-center justify-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <span x-text="challengeData?.location">College Track, Jaipur</span>
+                    <span class="mx-1">&bull;</span>
+                    <span class="text-gray-500">2km away</span>
+                </div>
+            </div>
+
+            <div
+                class="bg-zinc-950/80 rounded-2xl p-4 border border-zinc-800/80 mb-5 relative overflow-hidden w-full shadow-inner">
+                <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 px-2">Current King</div>
+                <div class="flex items-center justify-between px-2">
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <div class="w-12 h-12 rounded-full border-2 border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]"
+                                style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704b'); background-size: cover;">
+                            </div>
+                            <div
+                                class="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[10px] w-4 h-4 rounded-full flex justify-center items-center">
+                                👑</div>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-white leading-tight">Vikram<br>"The Flash"</div>
+                            <div class="text-[10px] font-semibold text-brand mt-0.5">State Rank #12</div>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-black text-yellow-500 drop-shadow-md">11.1<span
+                            class="text-lg text-yellow-500/80">s</span></div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mb-5 w-full">
+                <div
+                    class="flex-1 bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-xl p-3 text-center border border-zinc-700/50 shadow-md">
+                    <div class="text-2xl font-black text-brand mb-0.5">500</div>
+                    <div class="text-[10px] font-bold text-zinc-400 uppercase">BPI Bounty</div>
+                </div>
+                <div
+                    class="flex-1 bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-xl p-3 justify-center items-center flex flex-col border border-zinc-700/50 shadow-md">
+                    <div class="text-2xl mb-0.5 drop-shadow-md">⚡</div>
+                    <div class="text-[10px] font-bold text-zinc-400 uppercase">'Lightning' Badge</div>
+                </div>
+            </div>
+
+            <div
+                class="text-xs text-center font-semibold bg-zinc-800/50 px-4 py-2.5 rounded-lg w-full mb-6 border border-zinc-700/50 flex items-center justify-center gap-2">
+                <span class="relative flex h-2 w-2">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
+                </span>
+                <span class="text-zinc-300">5 athletes currently attempting to beat this.</span>
+            </div>
+
+            <button @click="activeChallenge = null; setTimeout(() => { showDuelScreen = true }, 300)"
+                class="w-full py-4 bg-gradient-to-r from-brand to-brand-dark hover:from-brand-dark hover:to-orange-700 rounded-xl font-black text-sm uppercase tracking-widest text-white shadow-[0_4px_15px_rgba(249,115,22,0.4)] transition-all active:scale-[0.98]">
+                Travel to Location
+            </button>
+
+            <!-- Close button for modal -->
+            <button @click="activeChallenge = null"
+                class="absolute top-4 right-4 w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </div><!-- 1v1 Duel Challenge Screen -->
+    <div x-show="showDuelScreen" x-cloak
+        class="modal-layer bg-zinc-950 flex flex-col items-center justify-center p-6 h-full w-full">
+        <div class="absolute inset-0 z-0 opacity-20">
+            <div class="absolute inset-x-0 top-0 h-1/2 bg-red-900/50"></div>
+            <div class="absolute inset-x-0 bottom-0 h-1/2 bg-blue-900/50"></div>
+        </div>
+
+        <div class="z-10 text-center mb-12 slide-up" x-show="showDuelScreen">
+            <h1
+                class="text-4xl font-black italic tracking-tight text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                1v1 DUEL ACCEPTED</h1>
+            <div class="text-sm font-bold text-zinc-400 mt-2 flex items-center justify-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                <span>Format: 100m Dash (AI verified)</span>
+            </div>
+        </div>
+
+        <div class="z-10 w-full max-w-sm flex flex-col gap-6 slide-up" style="animation-delay: 0.1s;"
+            x-show="showDuelScreen">
+            <!-- Opponent (Vikram) -->
+            <div
+                class="bg-gradient-to-r from-red-950 to-zinc-900 rounded-2xl p-4 border border-red-900/50 flex flex-row-reverse items-center justify-between shadow-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-red-500/10 rounded-full blur-2xl"></div>
+                <div class="relative z-10 w-20 h-20 rounded-full border-4 border-red-500 bg-zinc-800 shadow-[0_0_15px_rgba(239,68,68,0.5)] flex-shrink-0"
+                    style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704b'); background-size: cover;">
+                    <div class="absolute -bottom-2 -left-2 text-xl drop-shadow-md">👑</div>
+                </div>
+                <div class="z-10 pr-4">
+                    <div class="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">Challenged</div>
+                    <div class="text-xl font-black text-white leading-tight">Vikram Singh</div>
+                    <div class="text-xs text-zinc-400 font-semibold text-left">Target: 11.1s</div>
+                </div>
+            </div>
+
+            <!-- VS Badge -->
+            <div class="flex justify-center -my-9 z-20 relative">
+                <div class="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full"></div>
+                <div
+                    class="w-14 h-14 rounded-full bg-zinc-950 border-2 border-zinc-700 flex items-center justify-center font-black italic text-xl shadow-[0_0_20px_rgba(0,0,0,0.8)] text-white z-10">
+                    VS</div>
+            </div>
+
+            <!-- You (Arjun) -->
+            <div
+                class="bg-gradient-to-r from-zinc-900 to-blue-950 rounded-2xl p-4 border border-blue-900/50 flex items-center justify-between shadow-lg relative overflow-hidden">
+                <div class="absolute left-0 bottom-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
+                <div class="z-10 w-20 h-20 rounded-full border-4 border-blue-500 bg-zinc-800 shadow-[0_0_15px_rgba(59,130,246,0.5)] flex-shrink-0"
+                    style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704d'); background-size: cover;">
+                </div>
+                <div class="text-right z-10 pl-4">
+                    <div class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1">Challenger</div>
+                    <div class="text-xl font-black text-white leading-tight">Arjun Patel</div>
+                    <div class="text-xs text-zinc-400 font-semibold">Record: 11.24s</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="z-10 mt-12 w-full max-w-sm slide-up flex flex-col items-center gap-4" style="animation-delay: 0.2s;"
+            x-show="showDuelScreen">
+            <button @click="startCountdown()" x-show="!countdown"
+                class="w-full py-4 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-sm uppercase tracking-wider shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-transform active:scale-95 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 22V12h6v10" />
+                </svg>
+                Deploy Kinematic Camera
+            </button>
+            <button @click="showDuelScreen = false" x-show="!countdown"
+                class="px-6 py-2 text-zinc-500 hover:text-white rounded-xl font-bold text-xs transition-colors uppercase tracking-wider border border-transparent hover:border-zinc-700">
+                Cancel Match
+            </button>
+
+            <div x-show="countdown" class="text-center h-32 flex items-center justify-center w-full">
+                <div class="text-[8rem] leading-none font-black drop-shadow-[0_0_30px_rgba(255,255,255,0.6)] transition-all duration-300"
+                    :class="countdownText === 'GO!' ? 'text-green-500 scale-125' : 'text-white scale-100'"
+                    x-text="countdownText"></div>
+            </div>
+            <div x-show="countdown && countdownText !== 'GO!'"
+                class="text-xs text-brand animate-pulse uppercase tracking-widest font-bold">Checking stance...</div>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div x-show="showVictory" x-cloak class="modal-layer">
+        <div
+            class="absolute inset-0 bg-brand/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 h-full w-full">
+            <!-- Confetti effect base -->
+            <div
+                class="absolute inset-0 overflow-hidden pointer-events-none opacity-50 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-300 via-transparent to-transparent">
+            </div>
+
+            <h1 class="text-7xl font-black italic tracking-tighter text-white drop-shadow-2xl mb-2 slide-up z-10"
+                x-show="showVictory">VICTORY</h1>
+            <div class="text-xs font-black bg-white text-brand px-6 py-1.5 rounded-full uppercase tracking-widest shadow-xl slide-up mb-10 z-10 flex items-center gap-2"
+                style="animation-delay: 0.1s;" x-show="showVictory">
+                <svg class="w-4 h-4 text-brand" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                        clip-rule="evenodd"></path>
+                </svg>
+                New Record
+            </div>
+
+            <div class="bg-black/40 backdrop-blur-md rounded-3xl p-8 w-full max-w-sm border border-white/20 slide-up shadow-2xl z-10 flex flex-col items-center"
+                style="animation-delay: 0.2s;" x-show="showVictory">
+                <div class="text-center mb-8 relative">
+                    <div class="absolute -inset-4 bg-yellow-400/20 blur-xl rounded-full"></div>
+                    <div class="text-[10px] font-bold text-white/70 uppercase mb-1 relative z-10 tracking-widest">Final
+                        Time
+                    </div>
+                    <div
+                        class="text-[5rem] leading-none font-black text-white font-mono tracking-tighter relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">
+                        10.9<span class="text-4xl text-yellow-400 ml-1">s</span></div>
+                </div>
+
+                <div class="space-y-3 w-full">
+                    <div class="flex items-center justify-between bg-white/10 rounded-2xl p-4 border border-white/5">
+                        <div class="text-xs font-bold text-white uppercase tracking-wider">BPI Gained</div>
+                        <div class="text-xl font-black text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">+500
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between bg-white/10 rounded-2xl p-4 border border-white/5">
+                        <div class="text-xs font-bold text-white uppercase tracking-wider truncate mr-4">New Title</div>
+                        <div
+                            class="text-[10px] font-black text-brand bg-white px-3 py-1.5 rounded-full truncate shadow-sm">
+                            Local Legend</div>
+                    </div>
+                    <div
+                        class="flex gap-2 mt-6 text-[10px] font-bold text-white uppercase tracking-wider bg-black/40 p-3 rounded-xl border border-white/10 justify-center items-center w-full text-center">
+                        <span class="text-lg">👁️</span> Scout visibility increased
+                    </div>
+                </div>
+            </div>
+
+            <button @click="finishPlay()"
+                class="mt-10 w-full max-w-sm py-4 bg-white text-brand rounded-2xl font-black text-lg uppercase tracking-wider shadow-[0_0_30px_rgba(255,255,255,0.4)] slide-up active:scale-95 transition-transform z-10"
+                style="animation-delay: 0.3s;" x-show="showVictory">
+                Claim Territory
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div x-show="showSettings" x-cloak
+        class="modal-layer bg-black/50 backdrop-blur-sm flex justify-center items-end sm:items-center w-full h-full pb-0 sm:pb-0 z-[80]">
+        <div @click.outside="showSettings = false" x-show="showSettings"
+            x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-300"
+            x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-10 sm:scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-10 sm:scale-95"
+            class="bg-zinc-900 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border-t sm:border border-zinc-700 h-[80vh] sm:h-auto overflow-y-auto no-scrollbar">
+
+            <div
+                class="flex justify-between items-center mb-6 sticky top-0 bg-zinc-900 pt-2 pb-4 z-10 border-b border-zinc-800">
+                <h2 class="text-xl font-black text-white tracking-tight">Map Presence</h2>
+                <button @click="showSettings = false"
+                    class="text-zinc-400 hover:text-white bg-zinc-800 rounded-full p-2 transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-8">
+                <!-- Visibility Section -->
+                <section>
+                    <div class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Map Visibility</div>
+
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-colors"
+                            :class="visibilityLevel === 'everyone' ? 'bg-brand/10 border-brand/50 ring-1 ring-brand/50' : 'bg-zinc-800/50 border-zinc-700/50 hover:bg-zinc-800'">
+                            <input type="radio" x-model="visibilityLevel" value="everyone" class="hidden">
+                            <div
+                                class="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center text-brand shrink-0">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-sm text-white flex items-center gap-2">Everyone <span
+                                        x-show="visibilityLevel==='everyone'"
+                                        class="w-2 h-2 rounded-full bg-brand"></span></div>
+                                <div class="text-xs text-zinc-400 mt-0.5">Visible to all athletes in the city.</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-colors"
+                            :class="visibilityLevel === 'friends' ? 'bg-blue-500/10 border-blue-500/50 ring-1 ring-blue-500/50' : 'bg-zinc-800/50 border-zinc-700/50 hover:bg-zinc-800'">
+                            <input type="radio" x-model="visibilityLevel" value="friends" class="hidden">
+                            <div
+                                class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 shrink-0">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-sm text-white flex items-center gap-2">Friends Only <span
+                                        x-show="visibilityLevel==='friends'"
+                                        class="w-2 h-2 rounded-full bg-blue-500"></span></div>
+                                <div class="text-xs text-zinc-400 mt-0.5">Only mutuals can see your location.</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-colors"
+                            :class="visibilityLevel === 'ghost' ? 'bg-zinc-100/10 border-zinc-100/50 ring-1 ring-white/50' : 'bg-zinc-800/50 border-zinc-700/50 hover:bg-zinc-800'">
+                            <input type="radio" x-model="visibilityLevel" value="ghost" @change="updateAvatarOnMap()"
+                                class="hidden">
+                            <div
+                                class="w-10 h-10 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-300 shrink-0">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-sm text-white flex items-center gap-2">Ghost Mode <span
+                                        x-show="visibilityLevel==='ghost'" class="w-2 h-2 rounded-full bg-white"></span>
+                                </div>
+                                <div class="text-[10px] uppercase font-bold text-brand mt-0.5">Invisible</div>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Map Theme Section -->
+                <section>
+                    <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Map Theme</div>
+                    <div class="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                        <button @click="changeMapTheme('dark')"
+                            :class="mapTheme === 'dark' ? 'bg-zinc-800 text-white shadow' : 'text-zinc-500 hover:text-zinc-300'"
+                            class="flex-1 py-2 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1">
+                            <div class="w-6 h-6 rounded-full bg-[#1e1e1e] border border-zinc-700"></div>
+                            Dark
+                        </button>
+                        <button @click="changeMapTheme('light')"
+                            :class="mapTheme === 'light' ? 'bg-zinc-800 text-white shadow' : 'text-zinc-500 hover:text-zinc-300'"
+                            class="flex-1 py-2 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1">
+                            <div class="w-6 h-6 rounded-full bg-[#f3f4f6] border border-zinc-300"></div>
+                            Light
+                        </button>
+                        <button @click="changeMapTheme('enhanced')"
+                            :class="mapTheme === 'enhanced' ? 'bg-zinc-800 text-white shadow' : 'text-zinc-500 hover:text-zinc-300'"
+                            class="flex-1 py-2 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1">
+                            <div
+                                class="w-6 h-6 rounded bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-400 to-blue-500 border border-zinc-700">
+                            </div>
+                            Enhanced
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Status Section -->
+                <section>
+                    <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Current Status</div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button @click="setStatus('running')"
+                            :class="myStatus === 'running' ? 'border-positive bg-positive/10 text-white' : 'border-zinc-700 bg-zinc-800/50 text-zinc-400'"
+                            class="p-4 rounded-2xl border transition-all text-left group">
+                            <div class="w-3 h-3 rounded-full bg-positive mb-3"
+                                :class="myStatus === 'running' ? 'shadow-[0_0_8px_#22c55e]' : ''"></div>
+                            <div class="font-bold text-sm">Active</div>
+                            <div class="text-[10px] mt-1 opacity-70">Logging workout</div>
+                        </button>
+
+                        <button @click="setStatus('idle')"
+                            :class="myStatus === 'idle' ? 'border-blue-500 bg-blue-500/10 text-white' : 'border-zinc-700 bg-zinc-800/50 text-zinc-400'"
+                            class="p-4 rounded-2xl border transition-all text-left">
+                            <div class="w-3 h-3 rounded-full bg-blue-500 mb-3"
+                                :class="myStatus === 'idle' ? 'shadow-[0_0_8px_#3b82f6]' : ''"></div>
+                            <div class="font-bold text-sm">Idle / Free</div>
+                            <div class="text-[10px] mt-1 opacity-70">Open to invites</div>
+                        </button>
+
+                        <button @click="setStatus('injured')"
+                            :class="myStatus === 'injured' ? 'border-negative bg-negative/10 text-white' : 'border-zinc-700 bg-zinc-800/50 text-zinc-400'"
+                            class="p-4 rounded-2xl border transition-all text-left">
+                            <div class="w-3 h-3 rounded-full bg-negative mb-3"
+                                :class="myStatus === 'injured' ? 'shadow-[0_0_8px_#ef4444]' : ''"></div>
+                            <div class="font-bold text-sm">Injured</div>
+                            <div class="text-[10px] mt-1 opacity-70">Taking it easy</div>
+                        </button>
+
+                        <button @click="setStatus('offline')"
+                            :class="myStatus === 'offline' ? 'border-zinc-500 bg-zinc-500/10 text-white' : 'border-zinc-700 bg-zinc-800/50 text-zinc-400'"
+                            class="p-4 rounded-2xl border transition-all text-left">
+                            <div class="w-3 h-3 rounded-full bg-zinc-500 mb-3"></div>
+                            <div class="font-bold text-sm">Offline</div>
+                            <div class="text-[10px] mt-1 opacity-70">Not training</div>
+                        </button>
+                    </div>
+                </section>
+
+                <button @click="showSettings = false"
+                    class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition-colors">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div x-show="showLeaderboard" x-cloak
+        class="modal-layer bg-black/50 backdrop-blur-sm flex justify-center items-end sm:items-center w-full h-full pb-0 sm:pb-0 z-[80]">
+        <div @click.outside="showLeaderboard = false" x-show="showLeaderboard"
+            x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-300"
+            x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-10 sm:scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-10 sm:scale-95"
+            class="bg-zinc-900 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border-t sm:border border-zinc-700 h-[85vh] sm:h-[80vh] flex flex-col">
+
+            <div class="flex justify-between items-center mb-6 shrink-0">
+                <div>
+                    <h2 class="text-xl font-black text-white tracking-tight">Jaipur Leaderboard</h2>
+                    <div class="text-xs text-brand font-bold mt-1 uppercase tracking-widest">BPI Top 50</div>
+                </div>
+                <button @click="showLeaderboard = false"
+                    class="text-zinc-400 hover:text-white bg-zinc-800 rounded-full p-2 transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-3 pb-6">
+                <!-- Filter Option inside Leaderboard -->
+                <div
+                    class="flex justify-between items-center bg-zinc-800/50 rounded-xl p-2 mb-2 border border-zinc-700/50">
+                    <div class="text-xs font-bold text-zinc-400 ml-2">Show:</div>
+                    <select
+                        class="bg-zinc-900 border border-zinc-700 text-white text-xs rounded-lg py-1 px-2 outline-none">
+                        <option value="city">Entire City</option>
+                        <option value="friends">Friends Only</option>
+                        <option value="clan">Clan Members</option>
+                    </select>
+                </div>
+
+                <!-- Rank 1 -->
+                <div
+                    class="bg-gradient-to-r from-yellow-500/20 to-zinc-800/50 border border-yellow-500/30 rounded-2xl p-3 flex items-center justify-between shadow-lg">
+                    <div class="flex items-center gap-4">
+                        <div class="text-lg font-black text-yellow-500 w-6 text-center">1</div>
+                        <div class="relative">
+                            <div class="w-10 h-10 rounded-full bg-zinc-800 border-2 border-yellow-500"
+                                style="background-image: url('https://i.pravatar.cc/150?u=r1'); background-size: cover;">
+                            </div>
+                            <div class="absolute -bottom-1 -right-1 text-[10px]">👑</div>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white text-sm">Gurkiran S.</div>
+                            <div class="text-[10px] text-zinc-400 font-semibold tracking-wide mt-0.5">Jaipur Titans
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-black text-brand">14,200</div>
+                        <div class="text-[9px] text-zinc-500 uppercase font-bold tracking-wider mt-0.5">BPI Pts</div>
+                    </div>
+                </div>
+
+                <!-- Rank 2 -->
+                <div
+                    class="bg-gradient-to-r from-zinc-300/10 to-zinc-800/50 border border-zinc-400/30 rounded-2xl p-3 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="text-lg font-black text-zinc-300 w-6 text-center">2</div>
+                        <div class="w-10 h-10 rounded-full bg-zinc-800 border-2 border-zinc-400"
+                            style="background-image: url('https://i.pravatar.cc/150?u=r2'); background-size: cover;">
+                        </div>
+                        <div>
+                            <div class="font-bold text-white text-sm">Amit V.</div>
+                            <div class="text-[10px] text-zinc-400 font-semibold tracking-wide mt-0.5">Malviya Sprinters
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-black text-brand">13,850</div>
+                        <div class="text-[9px] text-zinc-500 uppercase font-bold tracking-wider mt-0.5">BPI Pts</div>
+                    </div>
+                </div>
+
+                <!-- Rank 3 -->
+                <div
+                    class="bg-gradient-to-r from-orange-400/10 to-zinc-800/50 border border-orange-400/30 rounded-2xl p-3 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="text-lg font-black text-orange-400 w-6 text-center">3</div>
+                        <div class="w-10 h-10 rounded-full bg-zinc-800 border-2 border-orange-400"
+                            style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704b'); background-size: cover;">
+                        </div>
+                        <div>
+                            <div class="font-bold text-white text-sm">Vikram Singh</div>
+                            <div class="text-[10px] text-zinc-400 font-semibold tracking-wide mt-0.5">Pink City Track
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-black text-brand">12,900</div>
+                        <div class="text-[9px] text-zinc-500 uppercase font-bold tracking-wider mt-0.5">BPI Pts</div>
+                    </div>
+                </div>
+
+                <!-- Separator -->
+                <div class="flex items-center gap-4 py-1">
+                    <div class="flex-1 h-px bg-zinc-800"></div>
+                    <div class="w-1 h-1 rounded-full bg-zinc-600"></div>
+                    <div class="w-1 h-1 rounded-full bg-zinc-600"></div>
+                    <div class="w-1 h-1 rounded-full bg-zinc-600"></div>
+                    <div class="flex-1 h-px bg-zinc-800"></div>
+                </div>
+
+                <!-- You -->
+                <div
+                    class="bg-gradient-to-r from-blue-500/20 to-blue-900/40 border-2 border-blue-500 rounded-2xl p-3 flex items-center justify-between shadow-lg transform -translate-y-1">
+                    <div class="flex items-center gap-4">
+                        <div class="text-sm font-black text-blue-400 w-6 text-center">12</div>
+                        <div class="relative">
+                            <div class="w-10 h-10 rounded-full bg-zinc-800 border-2 border-blue-400"
+                                style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704d'); background-size: cover;">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white text-sm">Arjun Patel (You)</div>
+                            <div class="text-[10px] text-blue-300 font-semibold tracking-wide mt-0.5">Jaipur Javelins
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-black text-white drop-shadow-md">12,450</div>
+                        <div class="text-[9px] text-blue-300 uppercase font-bold tracking-wider mt-0.5">BPI Pts</div>
+                    </div>
+                </div>
+
+                <!-- Others -->
+                <div class="bg-zinc-800/30 rounded-2xl p-3 flex items-center justify-between border border-zinc-800/50">
+                    <div class="flex items-center gap-4 opacity-70">
+                        <div class="text-xs font-bold text-zinc-500 w-6 text-center">13</div>
+                        <div class="w-8 h-8 rounded-full bg-zinc-700"
+                            style="background-image: url('https://i.pravatar.cc/150?u=r4'); background-size: cover;">
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white text-xs">Priya D.</div>
+                        </div>
+                    </div>
+                    <div class="font-bold text-zinc-300 text-sm">11,800</div>
+                </div>
+                <div class="bg-zinc-800/30 rounded-2xl p-3 flex items-center justify-between border border-zinc-800/50">
+                    <div class="flex items-center gap-4 opacity-70">
+                        <div class="text-xs font-bold text-zinc-500 w-6 text-center">14</div>
+                        <div class="w-8 h-8 rounded-full bg-zinc-700"
+                            style="background-image: url('https://i.pravatar.cc/150?u=r5'); background-size: cover;">
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white text-xs">Karan Singh</div>
+                        </div>
+                    </div>
+                    <div class="font-bold text-zinc-300 text-sm">11,210</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Clan Hub Modal -->
+    <div x-show="showClan" x-cloak
+        class="modal-layer bg-black/80 backdrop-blur-md flex justify-center items-end sm:items-center w-full h-full pb-0 sm:pb-0 z-[90]">
+        <div @click.outside="showClan = false" x-show="showClan"
+            x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-400"
+            x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-10 sm:scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-10 sm:scale-95"
+            class="bg-zinc-950 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-brand/30 h-[92vh] sm:h-[85vh] flex flex-col overflow-hidden relative">
+
+            <!-- Clan Management State: No Clan -->
+            <div x-show="!hasClan"
+                class="absolute inset-0 bg-zinc-950 z-20 flex flex-col items-center justify-center p-6 text-center">
+
+                <button @click="showClan = false"
+                    class="absolute top-4 right-4 text-zinc-400 hover:text-white bg-zinc-900 rounded-full p-2 transition-colors border border-zinc-800">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <div
+                    class="w-24 h-24 bg-zinc-900 rounded-full border-2 border-zinc-800 flex items-center justify-center mb-6 shadow-inner relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-800 to-transparent opacity-50">
+                    </div>
+                    <svg class="w-10 h-10 text-zinc-600 relative z-10" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </div>
+
+                <h2 class="text-2xl font-black italic text-white mb-2">LONE WOLF</h2>
+                <p class="text-sm text-zinc-400 mb-8 max-w-[280px]">You are not allied with any active clan. Join a
+                    community to conquer territories and climb the city ranks.</p>
+
+                <div class="space-y-3 w-full max-w-sm">
+                    <button @click="hasClan = true; showToast('Created new Clan!')"
+                        class="w-full py-4 bg-brand hover:bg-brand-dark text-white rounded-2xl font-black text-lg uppercase tracking-wider shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all transform active:scale-95 text-center">
+                        Create Clan
+                    </button>
+
+                    <button @click="showToast('Searching for open clans...')"
+                        class="w-full py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white rounded-2xl font-bold uppercase tracking-wider transition-colors text-center">
+                        Discover Clans
+                    </button>
+                </div>
+            </div>
+
+            <!-- Clan Header -->
+            <div class="relative w-full h-40 shrink-0 border-b border-zinc-800">
+                <!-- Background Image with Gradient Overlay -->
+                <div class="absolute inset-0 bg-cover bg-center"
+                    style="background-image: url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=2069&auto=format&fit=crop');">
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent"></div>
+
+                <button @click="showClan = false"
+                    class="absolute top-4 right-4 text-white hover:text-brand bg-black/50 backdrop-blur-md rounded-full p-2 transition-colors z-10 border border-white/10">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <!-- Clan Info -->
+                <div class="absolute bottom-4 left-6 right-6 flex items-end justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span
+                                class="text-[10px] font-black uppercase tracking-widest text-brand bg-brand/20 px-2 py-0.5 rounded border border-brand/30">Rank
+                                #2 in City</span>
+                        </div>
+                        <h2
+                            class="text-3xl font-black italic tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+                            Jaipur Javelins</h2>
+                        <div class="text-xs text-zinc-300 font-semibold mt-1">"Swift as the wind, sharp as a spear."
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-black text-brand drop-shadow-md">84K</div>
+                        <div class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Total BPI</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="flex border-b border-zinc-800 shrink-0 bg-zinc-900/50">
+                <button @click="clanTab = 'chat'"
+                    :class="clanTab === 'chat' ? 'text-brand border-b-2 border-brand bg-zinc-900' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'"
+                    class="flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors">Comms</button>
+                <button @click="clanTab = 'roster'"
+                    :class="clanTab === 'roster' ? 'text-brand border-b-2 border-brand bg-zinc-900' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'"
+                    class="flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors">Roster</button>
+                <button @click="clanTab = 'badges'"
+                    :class="clanTab === 'badges' ? 'text-brand border-b-2 border-brand bg-zinc-900' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'"
+                    class="flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors">Armory</button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-hidden relative bg-zinc-950">
+
+                <!-- Chat Tab -->
+                <div x-show="clanTab === 'chat'" class="absolute inset-0 flex flex-col"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-x-4"
+                    x-transition:enter-end="opacity-100 translate-x-0">
+
+                    <div class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+
+                        <!-- Date Separator -->
+                        <div class="text-center">
+                            <span
+                                class="text-[9px] font-bold text-zinc-600 uppercase tracking-widest bg-zinc-900 px-3 py-1 rounded-full border border-zinc-800">Today</span>
+                        </div>
+
+                        <!-- System Message -->
+                        <div class="flex justify-center">
+                            <div
+                                class="bg-brand/10 border border-brand/20 text-brand text-[10px] font-bold px-4 py-1.5 rounded-lg flex items-center gap-2">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Arjun claimed College Track (+500 BPI)
+                            </div>
+                        </div>
+
+                        <!-- Other User Message -->
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full border whitespace-nowrap border-zinc-700 bg-zinc-800 shrink-0 mt-1"
+                                style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704a'); background-size: cover;">
+                            </div>
+                            <div>
+                                <div class="flex items-baseline gap-2 mb-1">
+                                    <span class="font-bold text-sm text-zinc-300">Rahul (Co-Leader)</span>
+                                    <span class="text-[9px] text-zinc-600 font-semibold">10:42 AM</span>
+                                </div>
+                                <div
+                                    class="bg-zinc-800/80 text-zinc-200 text-sm px-4 py-2 rounded-2xl rounded-tl-none border border-zinc-700 w-fit max-w-[85%]">
+                                    Let's go! I'm hitting SMS stadium later, anyone want to join for some drills?
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- My Message -->
+                        <div class="flex items-start gap-3 flex-row-reverse">
+                            <div class="w-8 h-8 rounded-full border border-brand bg-zinc-800 shrink-0 mt-1 shadow-[0_0_8px_rgba(249,115,22,0.3)]"
+                                style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704d'); background-size: cover;">
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <div class="flex items-baseline gap-2 mb-1 flex-row-reverse">
+                                    <span class="font-bold text-sm text-brand">You</span>
+                                    <span class="text-[9px] text-zinc-600 font-semibold">10:45 AM</span>
+                                </div>
+                                <div
+                                    class="bg-brand text-white text-sm px-4 py-2 rounded-2xl rounded-tr-none shadow-md w-fit max-w-[85%] text-right">
+                                    I'm down. Just need to finish this set here.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Check-in Action Message -->
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full border border-zinc-700 bg-zinc-800 shrink-0 mt-1"
+                                style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704c'); background-size: cover;">
+                            </div>
+                            <div>
+                                <div class="flex items-baseline gap-2 mb-1">
+                                    <span class="font-bold text-sm text-zinc-300">Neha</span>
+                                    <span class="text-[9px] text-zinc-600 font-semibold">11:02 AM</span>
+                                </div>
+                                <div
+                                    class="bg-gradient-to-r from-positive/10 to-zinc-800/80 text-white text-sm px-4 py-3 rounded-2xl rounded-tl-none border border-positive/30 w-fit max-w-[85%]">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="w-2 h-2 rounded-full bg-positive animate-pulse"></span>
+                                        <span
+                                            class="text-[10px] font-bold text-positive uppercase tracking-wider">Checked
+                                            In</span>
+                                    </div>
+                                    <div class="font-semibold text-zinc-300 text-xs">At Central Park Outer Loop
+                                        (Running)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="p-4 bg-zinc-900 border-t border-zinc-800 shrink-0">
+                        <div class="relative">
+                            <button
+                                class="absolute left-2 top-1/2 -translate-y-1/2 p-2 text-brand hover:text-brand-dark transition-colors drop-shadow-md group">
+                                <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z">
+                                    </path>
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </button>
+                            <input type="text" placeholder="Send a message to clan..."
+                                class="w-full bg-zinc-950 border border-zinc-800/80 text-white text-sm rounded-full pl-12 pr-12 py-3 focus:outline-none focus:border-brand/50 focus:ring-1 focus:ring-brand/50 transition-all font-medium placeholder-zinc-600">
+                            <button
+                                class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-brand rounded-full flex items-center justify-center text-white hover:bg-brand-dark transition-colors shadow-md">
+                                <svg class="w-4 h-4 translate-x-px -translate-y-px" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Roster Tab (Friends) -->
+                <div x-show="clanTab === 'roster'" class="absolute inset-0 overflow-y-auto no-scrollbar p-4"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-x-4"
+                    x-transition:enter-end="opacity-100 translate-x-0">
+
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Active Members (12)</div>
+                        <button
+                            class="text-[10px] font-bold text-brand uppercase tracking-wider bg-brand/10 px-2 py-1 rounded hover:bg-brand/20 transition-colors">Invite</button>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Member 1: Online -->
+                        <div
+                            class="bg-zinc-900 border border-zinc-800/80 rounded-2xl p-3 flex justify-between items-center group hover:border-zinc-600 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="relative">
+                                    <div class="w-12 h-12 rounded-full border-2 border-zinc-700 bg-zinc-800"
+                                        style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704a'); background-size: cover;">
+                                    </div>
+                                    <div
+                                        class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-zinc-900 bg-warn shadow-[0_0_8px_#eab308]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="font-bold text-white text-sm">Rahul Sharma</div>
+                                        <span
+                                            class="text-[9px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700 font-bold uppercase tracking-wider">Co-Lead</span>
+                                    </div>
+                                    <div class="text-xs font-semibold text-warn mt-0.5">Lifting at Gold's Gym</div>
+                                </div>
+                            </div>
+                            <button
+                                class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-brand group-hover:text-white transition-colors">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Member 2: Running -->
+                        <div
+                            class="bg-zinc-900 border border-zinc-800/80 rounded-2xl p-3 flex justify-between items-center group hover:border-zinc-600 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="relative">
+                                    <div class="w-12 h-12 rounded-full border-2 border-zinc-700 bg-zinc-800"
+                                        style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704c'); background-size: cover;">
+                                    </div>
+                                    <div
+                                        class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-zinc-900 bg-positive shadow-[0_0_8px_#22c55e]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-white text-sm">Neha Agarwal</div>
+                                    <div class="text-xs font-semibold text-positive mt-0.5">Running (Central Park)</div>
+                                </div>
+                            </div>
+                            <button
+                                class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-brand group-hover:text-white transition-colors">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Separate Offline -->
+                        <div class="text-xs font-bold text-zinc-600 uppercase tracking-widest mt-6 mb-2">Offline</div>
+
+                        <!-- Member 3: Offline -->
+                        <div
+                            class="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-3 flex justify-between items-center opacity-80">
+                            <div class="flex items-center gap-3">
+                                <div class="relative">
+                                    <div class="w-12 h-12 rounded-full border-2 border-zinc-800 bg-zinc-800 filter grayscale"
+                                        style="background-image: url('https://i.pravatar.cc/150?u=r8'); background-size: cover;">
+                                    </div>
+                                    <div
+                                        class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-zinc-900 bg-zinc-600">
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-white text-sm">Deepak Kumar</div>
+                                    <div class="text-xs font-semibold text-zinc-500 mt-0.5">Last seen 2h ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Badges Tab (Armory) -->
+                <div x-show="clanTab === 'badges'" class="absolute inset-0 overflow-y-auto no-scrollbar p-5"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-x-4"
+                    x-transition:enter-end="opacity-100 translate-x-0">
+
+                    <div class="text-center mb-8">
+                        <div class="text-sm font-black text-white italic tracking-tight mb-1">CLAN ARMORY</div>
+                        <div
+                            class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest max-w-[250px] mx-auto">
+                            Equip badges to display on your map profile to show off your achievements.</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Badge 1: Equipped -->
+                        <div
+                            class="bg-gradient-to-br from-brand/20 to-zinc-900 border-2 border-brand/50 rounded-2xl p-4 flex flex-col items-center text-center relative overflow-hidden group shadow-[0_0_15px_rgba(249,115,22,0.15)] cursor-pointer">
+                            <div
+                                class="absolute inset-0 bg-brand/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            </div>
+                            <div
+                                class="absolute top-2 right-2 text-[9px] font-black uppercase tracking-widest text-brand bg-brand/10 px-2 py-0.5 rounded">
+                                Equipped</div>
+
+                            <div
+                                class="w-16 h-16 rounded-full bg-zinc-900 border border-brand/30 flex items-center justify-center mb-3 shadow-inner relative">
+                                <div class="absolute inset-0 bg-brand/20 blur-md rounded-full"></div>
+                                <span class="text-3xl relative z-10 drop-shadow-md">👑</span>
+                            </div>
+                            <div class="font-black text-white text-sm mb-1 leading-tight">Turf King</div>
+                            <div class="text-[10px] font-semibold text-zinc-400">Hold 3 territories simultaneously.
+                            </div>
+                        </div>
+
+                        <!-- Badge 2 -->
+                        <div
+                            class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center relative overflow-hidden group hover:border-zinc-600 transition-colors cursor-pointer">
+                            <div
+                                class="w-16 h-16 rounded-full bg-zinc-950 border border-zinc-700 flex items-center justify-center mb-3">
+                                <span
+                                    class="text-3xl text-zinc-500 drop-shadow-sm group-hover:text-amber-500 transition-colors">⚡</span>
+                            </div>
+                            <div class="font-bold text-zinc-300 text-sm mb-1 leading-tight">Lightning</div>
+                            <div class="text-[10px] font-semibold text-zinc-500">Sub 11s 100m Dash in a Duel.</div>
+                        </div>
+
+                        <!-- Badge 3 -->
+                        <div
+                            class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center text-center relative overflow-hidden group hover:border-zinc-600 transition-colors cursor-pointer">
+                            <div
+                                class="w-16 h-16 rounded-full bg-zinc-950 border border-zinc-700 flex items-center justify-center mb-3">
+                                <span
+                                    class="text-3xl text-zinc-500 drop-shadow-sm group-hover:text-blue-400 transition-colors">🔥</span>
+                            </div>
+                            <div class="font-bold text-zinc-300 text-sm mb-1 leading-tight">Streak Master</div>
+                            <div class="text-[10px] font-semibold text-zinc-500">7 day active workout streak.</div>
+                        </div>
+
+                        <!-- Locked Badge -->
+                        <div
+                            class="bg-zinc-900/30 border border-zinc-800/30 rounded-2xl p-4 flex flex-col items-center text-center relative opacity-50 grayscale cursor-not-allowed">
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                                <svg class="w-6 h-6 text-zinc-300" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div
+                                class="w-16 h-16 rounded-full bg-zinc-950 border border-zinc-700 flex items-center justify-center mb-3 relative z-10 opacity-30">
+                                <span class="text-3xl">🦾</span>
+                            </div>
+                            <div class="font-bold text-zinc-400 text-sm mb-1 leading-tight relative z-10">Iron Will
+                            </div>
+                            <div class="text-[10px] font-semibold text-zinc-500 relative z-10">1000kg total volume
+                                lifted.</div>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone (Leave Clan) -->
+                    <div class="mt-8 pt-6 border-t border-zinc-900">
+                        <div class="text-[10px] font-bold text-negative uppercase tracking-widest mb-3">Danger Zone
+                        </div>
+                        <button @click="hasClan = false; clanTab = 'chat'; showToast('You have left Jaipur Javelins.')"
+                            class="w-full py-3 bg-negative/10 hover:bg-negative/20 text-negative border border-negative/30 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors">
+                            Leave Clan
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Friends Modal -->
+    <div x-show="showFriends" x-cloak
+        class="modal-layer bg-black/50 backdrop-blur-sm flex justify-center items-end sm:items-center w-full h-full pb-0 sm:pb-0 z-[85]">
+        <div @click.outside="showFriends = false" x-show="showFriends"
+            x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-300"
+            x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-10 sm:scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-10 sm:scale-95"
+            class="bg-zinc-900 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-zinc-700 h-[85vh] flex flex-col overflow-hidden">
+
+            <div class="flex justify-between items-center p-6 pb-4 shrink-0 bg-zinc-900 border-b border-zinc-800">
+                <h2 class="text-xl font-black text-white tracking-tight">Friends</h2>
+                <button @click="showFriends = false"
+                    class="text-zinc-400 hover:text-white bg-zinc-800 rounded-full p-2 transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex border-b border-zinc-800 shrink-0 bg-zinc-900">
+                <button @click="friendsTab = 'friends'"
+                    :class="friendsTab === 'friends' ? 'text-brand border-b-2 border-brand font-black' : 'text-zinc-500 font-bold'"
+                    class="flex-1 py-3 text-xs uppercase tracking-wider transition-colors">My Friends</button>
+                <button @click="friendsTab = 'requests'"
+                    :class="friendsTab === 'requests' ? 'text-brand border-b-2 border-brand font-black' : 'text-zinc-500 font-bold'"
+                    class="flex-1 py-3 text-xs uppercase tracking-wider transition-colors relative">
+                    Requests
+                    <span class="absolute top-2 right-6 w-2 h-2 bg-brand rounded-full"></span>
+                </button>
+                <button @click="friendsTab = 'add'"
+                    :class="friendsTab === 'add' ? 'text-brand border-b-2 border-brand font-black' : 'text-zinc-500 font-bold'"
+                    class="flex-1 py-3 text-xs uppercase tracking-wider transition-colors">Add</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 no-scrollbar bg-zinc-950">
+
+                <!-- My Friends Tab -->
+                <div x-show="friendsTab === 'friends'" class="space-y-3"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-x-4">
+                    <div class="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-1 mb-2">24 Friends</div>
+
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-zinc-800"
+                                style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704a'); background-size: cover;">
+                            </div>
+                            <div>
+                                <div class="font-bold text-white text-sm">Rahul Sharma</div>
+                                <div class="text-[10px] text-zinc-500 font-semibold">Jaipur Javelins</div>
+                            </div>
+                        </div>
+                        <button @click="showToast('Removed friend.')"
+                            class="px-3 py-1.5 bg-zinc-800 hover:bg-negative/20 hover:text-negative text-zinc-300 rounded text-xs font-bold transition-colors">Remove</button>
+                    </div>
+
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-zinc-800"
+                                style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704c'); background-size: cover;">
+                            </div>
+                            <div>
+                                <div class="font-bold text-white text-sm">Neha Agarwal</div>
+                                <div class="text-[10px] text-zinc-500 font-semibold">Malviya Sprinters</div>
+                            </div>
+                        </div>
+                        <button
+                            class="px-3 py-1.5 bg-zinc-800 hover:bg-negative/20 hover:text-negative text-zinc-300 rounded text-xs font-bold transition-colors">Remove</button>
+                    </div>
+                </div>
+
+                <!-- Requests Tab -->
+                <div x-show="friendsTab === 'requests'" class="space-y-3"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-x-4">
+                    <div class="text-xs font-bold text-brand uppercase tracking-widest pl-1 mb-2">2 Pending Requests
+                    </div>
+
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 flex flex-col gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-zinc-800"
+                                style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704f'); background-size: cover;">
+                            </div>
+                            <div>
+                                <div class="font-bold text-white text-sm">Siddharth K.</div>
+                                <div class="text-[10px] text-zinc-500 font-semibold">Played 1v1 together (3 days ago)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 w-full">
+                            <button @click="showToast('Request Accepted!')"
+                                class="flex-1 py-1.5 bg-brand hover:bg-brand-dark text-white rounded font-bold text-xs transition-colors">Accept</button>
+                            <button
+                                class="flex-1 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded font-bold text-xs transition-colors">Decline</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 flex flex-col gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-zinc-800"
+                                style="background-image: url('https://i.pravatar.cc/150?u=rx3'); background-size: cover;">
+                            </div>
+                            <div>
+                                <div class="font-bold text-white text-sm">Aman Verma</div>
+                                <div class="text-[10px] text-zinc-500 font-semibold">From Clan: Rajput Runners</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 w-full">
+                            <button @click="showToast('Request Accepted!')"
+                                class="flex-1 py-1.5 bg-brand hover:bg-brand-dark text-white rounded font-bold text-xs transition-colors">Accept</button>
+                            <button
+                                class="flex-1 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded font-bold text-xs transition-colors">Decline</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Friends Tab -->
+                <div x-show="friendsTab === 'add'" class="space-y-4"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-x-4">
+                    <div class="relative w-full">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" placeholder="Search by name or username..."
+                            class="w-full bg-zinc-900 border border-zinc-800 text-white text-sm rounded-xl pl-10 pr-3 py-3 focus:outline-none focus:border-brand/50 focus:ring-1 focus:ring-brand/50 transition-all font-medium placeholder-zinc-600">
+                    </div>
+
+                    <div class="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-1 mt-4 mb-2">Suggested
+                        Athletes</div>
+
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-zinc-800"
+                                style="background-image: url('https://i.pravatar.cc/150?u=a042581f4e29026704e'); background-size: cover;">
+                            </div>
+                            <div>
+                                <div class="font-bold text-white text-sm">Priya Singh</div>
+                                <div class="text-[10px] text-zinc-500 font-semibold">2 mutual friends</div>
+                            </div>
+                        </div>
+                        <button @click="showToast('Friend Request Sent!')"
+                            class="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-brand rounded-lg text-xs font-bold transition-colors">Add</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Overlay container for claiming notification -->
+    <div id="toast-container"
+        class="ui-layer top-20 inset-x-4 flex flex-col items-center gap-2 z-[9999] pointer-events-none"></div>
+
+    <script>
+        function eklavyaMap() {
+            return {
+                map: null,
+                activeChallenge: null,
+                challengeData: null,
+                showDuelScreen: false,
+                countdown: false,
+                countdownText: '3',
+                showVictory: false,
+                territoryClaimed: false,
+                filter: 'all',
+
+                // User settings
+                showSettings: false,
+                showLeaderboard: false,
+                showClan: false,
+                showFriends: false,
+                friendsTab: 'friends', // friends, requests, add
+                clanTab: 'chat', // chat, roster, badges
+                visibilityLevel: 'everyone', // everyone, friends, ghost
+                mapTheme: 'dark', // dark, light, enhanced
+                myStatus: 'running', // running, lifting, idle, injured, offline
+
+                // Map Element references
+                myMarker: null,
+                hotspotMarker: null,
+                tileLayer: null,
+                markers: {
+                    athletes: [],
+                    challenges: [],
+                    fields: [],
+                    events: [] // e.g. tournaments
+                },
+
+                // Clan Management
+                hasClan: true,
+
+                initMap() {
+                    // Initialize Leaflet map (Coordinates for Jaipur)
+                    this.map = L.map('map', {
+                        zoomControl: false,
+                        attributionControl: false
+                    }).setView([26.9124, 75.7873], 15);
+
+                    this.setMapLayer();
+
+                    this.addClanTurfs();
+                    this.populateMap();
+
+                    // set up watcher for filters
+                    this.$watch('filter', value => this.applyFilter(value));
+                    this.$watch('visibilityLevel', () => this.updateAvatarOnMap());
+                },
+
+                changeMapTheme(theme) {
+                    this.mapTheme = theme;
+                    this.setMapLayer();
+                },
+
+                setMapLayer() {
+                    if (this.tileLayer) {
+                        this.map.removeLayer(this.tileLayer);
+                    }
+
+                    let url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'; // default dark
+                    let opts = { attribution: '&copy; <a href="https://carto.com/">Carto</a>' };
+
+                    if (this.mapTheme === 'light') {
+                        url = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+                    } else if (this.mapTheme === 'enhanced') {
+                        url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                        opts = { attribution: 'OSM' };
+                    }
+
+                    this.tileLayer = L.tileLayer(url, opts).addTo(this.map);
+                },
+
+                addClanTurfs() {
+                    // Jaipur Javelins Territory
+                    this.javelinsLayer = L.polygon([
+                        [26.9150, 75.7800],
+                        [26.9200, 75.7850],
+                        [26.9180, 75.7950],
+                        [26.9100, 75.7900]
+                    ], { className: 'clan-turf-javelins transition-all duration-1000' }).addTo(this.map);
+
+                    // Rival Territory (Titans)
+                    this.titansLayer = L.polygon([
+                        [26.9050, 75.7950],
+                        [26.9170, 75.8050],
+                        [26.9000, 75.8000]
+                    ], { className: 'clan-turf-titans transition-all duration-1000' }).addTo(this.map);
+                },
+
+                populateMap() {
+                    this.addAvatars();
+                    this.addChallenges();
+                    this.addFields();
+                    this.addEvents();
+                },
+
+                createAvatarIcon(imgId, statusClass, isMe = false) {
+                    const extraClass = (isMe && this.visibilityLevel === 'ghost') ? 'ghost' : '';
+                    return L.divIcon({
+                        className: '',
+                        html: `
+                            <div class="avatar-marker ${extraClass}" style="background-image: url('https://i.pravatar.cc/150?u=${imgId}');">
+                                <div class="status-dot ${statusClass}" style="display: ${isMe && this.visibilityLevel === 'ghost' ? 'none' : 'block'}"></div>
+                            </div>
+                        `,
+                        iconSize: [44, 44],
+                        iconAnchor: [22, 22]
+                    });
+                },
+
+                addAvatars() {
+                    // Arjun (Current User - center)
+                    this.myMarker = L.marker([26.9124, 75.7873], { icon: this.createAvatarIcon('a042581f4e29026704d', 'status-' + this.myStatus, true) }).addTo(this.map);
+
+                    // Rahul (Friend working out nearby)
+                    const rahul = L.marker([26.9100, 75.7850], { icon: this.createAvatarIcon('a042581f4e29026704a', 'status-lifting') });
+                    rahul.bindPopup("<div class='text-center p-2'><b class='text-brand text-[10px] uppercase font-bold tracking-widest mb-1 block'>Rahul</b><span class='text-sm font-bold text-white leading-tight block mb-1'>Strength Session</span><span class='text-xs text-zinc-400 font-semibold'>45m elapsed</span></div>");
+                    this.markers.athletes.push(rahul);
+
+                    // Vikram (Opponent at track)
+                    const vikram = L.marker([26.9142, 75.7982], { icon: this.createAvatarIcon('a042581f4e29026704b', 'status-idle') });
+                    vikram.bindPopup("<div class='text-center p-2'><b class='text-brand text-[10px] uppercase font-bold tracking-widest mb-1 block'>Vikram</b><span class='text-sm font-bold text-white leading-tight block mb-1'>State Rank #12</span><span class='text-xs text-zinc-400 font-semibold'>Idle at College Track</span></div>");
+                    this.markers.athletes.push(vikram);
+
+                    // Random other athlete running
+                    const neha = L.marker([26.9080, 75.7930], { icon: this.createAvatarIcon('a042581f4e29026704c', 'status-running') });
+                    this.markers.athletes.push(neha);
+
+                    // Add them to map initially
+                    this.markers.athletes.forEach(m => m.addTo(this.map));
+                },
+
+                addChallenges() {
+                    const hotspotIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class="map-icon-marker marker-challenge">⚡</div>`, iconSize: [36, 36], iconAnchor: [18, 18] });
+                    const hotspotIcon2 = L.divIcon({ className: 'custom-div-icon', html: `<div class="map-icon-marker marker-challenge">🔥</div>`, iconSize: [36, 36], iconAnchor: [18, 18] });
+
+                    // College Track Hotspot
+                    this.hotspotMarker = L.marker([26.9140, 75.7980], { icon: hotspotIcon });
+                    this.hotspotMarker.on('click', () => {
+                        this.challengeData = { name: "The Sub-11 Second Dash", location: "College Track, Jaipur" };
+                        this.activeChallenge = true;
+                    });
+                    this.markers.challenges.push(this.hotspotMarker);
+
+                    // Local park challenge
+                    const parkMarker = L.marker([26.9180, 75.7820], { icon: hotspotIcon2 });
+                    parkMarker.on('click', () => { this.showToast("Local Legend: 50 Pullups unbroken. Currently held by Dev."); });
+                    this.markers.challenges.push(parkMarker);
+
+                    this.markers.challenges.forEach(m => m.addTo(this.map));
+                },
+
+                addFields() {
+                    const fieldIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class="map-icon-marker marker-field">🏟️</div>`, iconSize: [36, 36], iconAnchor: [18, 18] });
+
+                    const field1 = L.marker([26.9050, 75.7850], { icon: fieldIcon });
+                    field1.bindPopup("<div class='p-2'><div class='text-xs font-bold text-positive uppercase tracking-wider mb-1'>Open Field</div><div class='text-sm font-bold text-white mb-1'>SMS Training Ground 2</div><div class='text-xs text-zinc-400 font-semibold mb-2'>Lighting available till 10 PM.</div><button class='w-full py-1.5 bg-zinc-800 rounded font-bold text-[10px] uppercase text-white hover:bg-zinc-700'>Set as destination</button></div>");
+                    this.markers.fields.push(field1);
+
+                    this.markers.fields.forEach(m => m.addTo(this.map));
+                },
+
+                addEvents() {
+                    const eventIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class="map-icon-marker marker-event">🏆</div>`, iconSize: [36, 36], iconAnchor: [18, 18] });
+
+                    const event1 = L.marker([26.9220, 75.7910], { icon: eventIcon });
+                    event1.bindPopup("<div class='p-2'><div class='text-xs font-bold text-purple-400 uppercase tracking-wider mb-1'>Upcoming Event</div><div class='text-sm font-bold text-white mb-1'>State Trials - Sprint Selections</div><div class='text-xs text-zinc-400 font-semibold mb-2'>Starts in 4 days. Registration open.</div><button class='w-full py-1.5 bg-purple-600 rounded font-bold text-[10px] uppercase text-white cursor-pointer hover:bg-purple-700 mt-1'>View Details</button></div>");
+                    this.markers.events.push(event1);
+
+                    this.markers.events.forEach(m => m.addTo(this.map));
+                },
+
+                applyFilter(f) {
+                    // Remove all first
+                    ['athletes', 'challenges', 'fields', 'events'].forEach(cat => {
+                        this.markers[cat].forEach(m => this.map.removeLayer(m));
+                    });
+
+                    if (f === 'all') {
+                        ['athletes', 'challenges', 'fields', 'events'].forEach(cat => {
+                            this.markers[cat].forEach(m => m.addTo(this.map));
+                        });
+                    } else if (this.markers[f]) {
+                        this.markers[f].forEach(m => m.addTo(this.map));
+                        // Always show self
+                        if (f !== 'athletes') this.myMarker.addTo(this.map);
+                    }
+                },
+
+                recenterMap() {
+                    this.map.flyTo([26.9124, 75.7873], 15, { animate: true, duration: 1 });
+                },
+
+                setStatus(status) {
+                    this.myStatus = status;
+                    if (status === 'offline') this.visibilityLevel = 'ghost';
+                    this.updateAvatarOnMap();
+                },
+
+                updateAvatarOnMap() {
+                    if (this.myMarker) {
+                        this.myMarker.setIcon(this.createAvatarIcon('a042581f4e29026704d', 'status-' + this.myStatus, true));
+                    }
+                },
+
+                triggerRally() {
+                    this.showToast("Rally Flare sent! Clan members notified.");
+                    // visual flair on map could be added here
+                },
+
+                startCountdown() {
+                    this.countdown = true;
+                    this.countdownText = '3';
+
+                    let count = 3;
+                    const interval = setInterval(() => {
+                        count--;
+                        if (count > 0) {
+                            this.countdownText = count.toString();
+                        } else if (count === 0) {
+                            this.countdownText = 'GO!';
+                        } else {
+                            clearInterval(interval);
+                            // Simulate race finishing
+                            setTimeout(() => {
+                                this.showDuelScreen = false;
+                                this.showVictory = true;
+                            }, 2000);
+                        }
+                    }, 1000);
+                },
+
+                finishPlay() {
+                    this.showVictory = false;
+                    this.countdown = false;
+                    this.territoryClaimed = true;
+
+                    // Visually update the map turf
+                    if (this.titansLayer) this.titansLayer.remove();
+
+                    // Expand Javelins Territory to cover the track
+                    this.javelinsLayer.setLatLngs([
+                        [26.9150, 75.7800],
+                        [26.9200, 75.7850],
+                        [26.9180, 75.8050],
+                        [26.9050, 75.7950],
+                        [26.9100, 75.7900]
+                    ]);
+
+                    // Change hotspot color manually
+                    const blueHotspotIcon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div class="map-icon-marker" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-color: #93c5fd;">👑</div>`,
+                        iconSize: [36, 36],
+                        iconAnchor: [18, 18]
+                    });
+                    this.hotspotMarker.setIcon(blueHotspotIcon);
+                    // clear popup
+                    this.hotspotMarker.off('click');
+                    this.hotspotMarker.bindPopup("<div class='text-center p-2 text-xs font-bold text-white'>Claimed by Arjun Patel</div>");
+
+                    this.showToast("Territory Claimed! The College track now belongs to the Jaipur Javelins.");
+                },
+
+                showToast(message) {
+                    const container = document.getElementById('toast-container');
+                    const toast = document.createElement('div');
+                    toast.className = 'bg-zinc-900 border border-zinc-700 text-white font-bold text-xs px-5 py-3 rounded-2xl shadow-2xl slide-up pointer-events-auto text-center max-w-xs flex items-center justify-center gap-2';
+                    toast.innerHTML = `<span class="text-brand">●</span> <span>${message}</span>`;
+                    container.appendChild(toast);
+
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        toast.style.transform = 'translateY(-20px) scale(0.95)';
+                        toast.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3500);
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
